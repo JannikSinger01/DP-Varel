@@ -11,184 +11,54 @@
 
     <style>
         :root {
-            /* Farben basierend auf dem Screenshot */
-            --primary-color: #2b6a6c; /* Dunkleres Türkis/Blau */
-            --secondary-color: #4db4b8; /* Helleres Türkis */
-            --bg-color: #f4f7f6; /* Leicht gräulicher/bläulicher Hintergrund */
+            var(--primary-color): #2b6a6c; 
+            --secondary-color: #4db4b8; 
+            --bg-color: #f4f7f6; 
             --text-color: #2c3e50;
             --sidebar-width: 480px; 
-            --accent-color: #1a4648; /* Noch dunkler für Hover/Betonung */
+            --accent-color: #1a4648; 
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: var(--text-color); background-color: var(--bg-color); overflow: hidden; }
+        #app-container { position: relative; width: 100vw; height: 100vh; }
+        #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Modernerer Font für 20. Jh. */
-            color: var(--text-color);
-            background-color: var(--bg-color);
-            overflow: hidden;
-        }
-
-        #app-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-        }
-
-        #map {
-            position: absolute;
-            top: 0; 
-            left: 0;
-            width: 100%; 
-            height: 100%;
-            /* Helle Basiskarte, Leaflet Default ist meist okay, wir passen den TileLayer später an */
-            z-index: 1;
-        }
-
-        /* --- RECHTE SEITENLEISTE (Lagerdaten) --- */
-        #sidebar {
-            width: var(--sidebar-width);
-            height: 100%;
-            background-color: white; /* Cleaner für viele Daten */
-            box-shadow: -5px 0 15px rgba(0,0,0,0.05);
-            position: absolute;
-            right: 0;
-            transform: translateX(100%);
-            top: 0;
-            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            border-left: 1px solid #eee;
-        }
-
-        #sidebar.active {
-            transform: translateX(0);
-        }
-
-        /* --- LINKE SEITENLEISTE (Personenstammdaten) --- */
-        #sidebar-left {
+        /* --- SIDEBARS --- */
+        .sidebar {
             width: var(--sidebar-width);
             height: 100%;
             background-color: white;
-            box-shadow: 5px 0 15px rgba(0,0,0,0.05);
             position: absolute;
-            left: 0;
-            transform: translateX(-100%);
             top: 0;
             transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
             z-index: 1000;
             display: flex;
             flex-direction: column;
-            border-right: 1px solid #eee;
         }
+        #sidebar-left { left: 0; transform: translateX(-100%); box-shadow: 5px 0 15px rgba(0,0,0,0.05); border-right: 1px solid #eee; }
+        #sidebar-right { right: 0; transform: translateX(100%); box-shadow: -5px 0 15px rgba(0,0,0,0.05); border-left: 1px solid #eee; }
+        #sidebar-left.active { transform: translateX(0); }
+        #sidebar-right.active { transform: translateX(0); }
 
-        #sidebar-left.active {
-            transform: translateX(0);
-        }
+        .sidebar-header { padding: 25px 20px; background-color: #2b6a6c; color: white; display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header h2 { font-size: 1.3rem; font-weight: 600; margin: 0; }
+        .close-btn { background: none; border: none; font-size: 1.8rem; cursor: pointer; color: rgba(255,255,255,0.8); line-height: 1; transition: color 0.2s; }
+        .close-btn:hover { color: white; }
 
-        /* Gemeinsame Sidebar-Klassen */
-        .sidebar-header {
-            padding: 25px 20px; 
-            background-color: var(--primary-color);
-            color: white;
-            display: flex;
-            justify-content: space-between; 
-            align-items: center;
-        }
+        .sidebar-content { padding: 25px; overflow-y: auto; flex-grow: 1; background-color: var(--bg-color); }
+        .data-card { background: white; border-radius: 6px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); border: 1px solid #e1e8ed; }
+        .data-card h3 { font-size: 1rem; color: #2b6a6c; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 2px solid #4db4b8; display: inline-block; }
+        
+        .data-group { margin-bottom: 12px; display: flex; flex-direction: column; }
+        .data-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #7f8c8d; margin-bottom: 3px; font-weight: 600; }
+        .data-value { font-size: 1rem; line-height: 1.4; color: #2c3e50; }
 
-        .sidebar-header h2 {
-            font-size: 1.3rem; 
-            font-weight: 600;
-            margin: 0;
-        }
+        .placeholder-text { padding: 40px 20px; color: #7f8c8d; text-align: center; font-size: 1.1rem; }
 
-        .close-btn {
-            background: none; 
-            border: none; 
-            font-size: 1.8rem; 
-            cursor: pointer; 
-            color: rgba(255,255,255,0.8);
-            line-height: 1;
-            transition: color 0.2s;
-        }
-
-        .close-btn:hover {
-            color: white;
-        }
-
-        .sidebar-content {
-            padding: 25px; 
-            overflow-y: auto; 
-            flex-grow: 1;
-            background-color: var(--bg-color); /* Leichter Kontrast zum Header */
-        }
-
-        .data-card {
-            background: white;
-            border-radius: 6px;
-            padding: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-            border: 1px solid #e1e8ed;
-        }
-
-        .data-card h3 {
-            font-size: 1rem;
-            color: var(--primary-color);
-            margin-bottom: 15px;
-            padding-bottom: 5px;
-            border-bottom: 2px solid var(--secondary-color);
-            display: inline-block;
-        }
-
-        .data-group {
-            margin-bottom: 12px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .data-label {
-            font-size: 0.75rem; 
-            text-transform: uppercase; 
-            letter-spacing: 0.5px;
-            color: #7f8c8d; 
-            margin-bottom: 3px; 
-            font-weight: 600;
-        }
-
-        .data-value {
-            font-size: 1rem; 
-            line-height: 1.4;
-            color: #2c3e50;
-        }
-
-        .placeholder-text {
-            padding: 40px 20px; 
-            color: #7f8c8d; 
-            text-align: center; 
-            font-size: 1.1rem;
-        }
-
-        /* Eigener Marker Stil (Kreis in App-Farbe) */
-        .dp-marker {
-            width: 16px;
-            height: 16px;
-            background-color: var(--secondary-color);
-            border: 2px solid white;
-            border-radius: 50%;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            transition: transform 0.2s, background-color 0.2s;
-        }
-        .dp-marker:hover {
-            transform: scale(1.2);
-            background-color: var(--primary-color);
-            z-index: 1000 !important;
-        }
+        /* Marker Stil */
+        .dp-marker { width: 16px; height: 16px; background-color: #4db4b8; border: 2px solid white; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); transition: transform 0.2s, background-color 0.2s; }
+        .dp-marker:hover { transform: scale(1.2); background-color: #2b6a6c; z-index: 1000 !important; }
     </style>
 </head>
 <body>
@@ -197,224 +67,144 @@
         <div id="map"></div>
 
         <!-- LINKE SIDEBAR (Stammdaten) -->
-        <div id="sidebar-left">
+        <div id="sidebar-left" class="sidebar">
             <div class="sidebar-header">
                 <h2>Personenstammdaten</h2>
                 <button class="close-btn" onclick="closeSidebar()">&times;</button>
             </div>
-            
             <div class="sidebar-content" id="sidebar-left-data" style="display: none;">
                 <div class="data-card">
                     <h3>Identifikation</h3>
-                    <div class="data-group"><span class="data-label">Name, Vorname</span><div class="data-value" id="detail-name" style="font-weight: bold; color: var(--primary-color); font-size: 1.2rem;">-</div></div>
+                    <div class="data-group"><span class="data-label">Name, Vorname</span><div class="data-value" id="detail-name" style="font-weight: bold; color: #2b6a6c; font-size: 1.2rem;">-</div></div>
                     <div class="data-group"><span class="data-label">Geburtsdatum</span><div class="data-value" id="detail-gebdatum">-</div></div>
-                    <div class="data-group"><span class="data-label">Geburtsort</span><div class="data-value" id="detail-gebort">-</div></div>
+                    <div class="data-group"><span class="data-label">Todesdatum</span><div class="data-value" id="detail-todesdatum">-</div></div>
+                    <div class="data-group"><span class="data-label">Geburtsort (Kreis)</span><div class="data-value" id="detail-gebort">-</div></div>
                     <div class="data-group"><span class="data-label">Staatsangehörigkeit</span><div class="data-value" id="detail-staat">-</div></div>
-                    <div class="data-group"><span class="data-label">Religion</span><div class="data-value" id="detail-religion">-</div></div>
-                    <div class="data-group"><span class="data-label">Familienstand</span><div class="data-value" id="detail-famstand">-</div></div>
                 </div>
-
                 <div class="data-card">
-                    <h3>Beruf & Familie</h3>
+                    <h3>Soziodemografie</h3>
+                    <div class="data-group"><span class="data-label">Glaubensbekenntnis</span><div class="data-value" id="detail-religion">-</div></div>
                     <div class="data-group"><span class="data-label">Beruf</span><div class="data-value" id="detail-beruf">-</div></div>
-                    <div class="data-group"><span class="data-label">Begleitende Familienangehörige</span><div class="data-value" id="detail-familie">-</div></div>
+                    <div class="data-group"><span class="data-label">Familienstand</span><div class="data-value" id="detail-famstand">-</div></div>
+                    <div class="data-group"><span class="data-label">Verheiratet mit</span><div class="data-value" id="detail-verheiratet">-</div></div>
                 </div>
             </div>
-            
-            <div class="placeholder-text" id="sidebar-left-placeholder">
-                Bitte wählen Sie eine Person auf der Karte aus, um die Stammdaten anzuzeigen.
-            </div>
+            <div class="placeholder-text" id="sidebar-left-placeholder">Bitte wählen Sie eine Person auf der Karte aus.</div>
         </div>
 
-        <!-- RECHTE SIDEBAR (Lagerdaten) -->
-        <div id="sidebar">
+        <!-- RECHTE SIDEBAR (Meldedaten) -->
+        <div id="sidebar-right" class="sidebar">
             <div class="sidebar-header">
-                <h2>Lager & Meldedaten</h2>
+                <h2>Administration & Aufenthalte</h2>
                 <button class="close-btn" onclick="closeSidebar()">&times;</button>
             </div>
-            
-            <div class="sidebar-content" id="sidebar-data" style="display: none;">
+            <div class="sidebar-content" id="sidebar-right-data" style="display: none;">
                 <div class="data-card">
-                    <h3>Aufenthalt in Varel</h3>
-                    <div class="data-group"><span class="data-label">Letzter Aufenthaltsort vor Varel</span><div class="data-value" id="detail-vorher">-</div></div>
-                    <div class="data-group"><span class="data-label">Zuzugsdatum Varel</span><div class="data-value" id="detail-zuzug">-</div></div>
-                    <div class="data-group"><span class="data-label">Lager / Adresse (Varel)</span><div class="data-value" id="detail-adresse">-</div></div>
+                    <h3>Registrierungsnummern</h3>
+                    <div class="data-group"><span class="data-label">IRO Nummer</span><div class="data-value" id="detail-iro">-</div></div>
+                    <div class="data-group"><span class="data-label">DP Nummer</span><div class="data-value" id="detail-dp">-</div></div>
+                    <div class="data-group"><span class="data-label">Abweichende Nummern</span><div class="data-value" id="detail-abwnummern">-</div></div>
                 </div>
-
                 <div class="data-card">
-                    <h3>Abgang</h3>
-                    <div class="data-group"><span class="data-label">Abgangsdatum</span><div class="data-value" id="detail-abgangsdatum">-</div></div>
-                    <div class="data-group"><span class="data-label">Zielort / Auswanderung</span><div class="data-value" id="detail-ziel">-</div></div>
+                    <h3>Aufenthalte (Zuzug / Ort / Abzug)</h3>
+                    <div class="data-value" id="detail-aufenthalte" style="font-size: 0.9rem;">-</div>
                 </div>
-
                 <div class="data-card">
-                    <h3>Quellen</h3>
-                    <div class="data-group"><span class="data-label">Aktenzeichen / Signatur</span><div class="data-value" id="detail-quelle">-</div></div>
-                    <div class="data-group"><span class="data-label">Anmerkungen</span><div class="data-value" id="detail-anmerkung" style="font-style: italic;">-</div></div>
+                    <h3>Zusatzinformationen</h3>
+                    <div class="data-group"><span class="data-label">Weitere Infos auf den Karten</span><div class="data-value" id="detail-infos" style="font-style: italic;">-</div></div>
                 </div>
-            </div>
-            
-            <div class="placeholder-text" id="sidebar-placeholder">
-                Informationen zum Aufenthalt und zur Weiterreise der ausgewählten Person.
             </div>
         </div>
     </div>
 
-    <!-- Plugins laden -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 
     <script>
-        // Karte initialisieren (Zentriert auf Varel/Norddeutschland)
-        const map = L.map('map').setView([53.396, 8.136], 6); // Varel Koordinaten grob als Start
+        const map = L.map('map').setView([53.396, 8.136], 6); 
 
-        // Modernere, cleanere Basemap für 20. Jh. Themen (CartoDB Positron)
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-            subdomains: 'abcd',
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
             maxZoom: 19
         }).addTo(map);
 
-        // BEISPIELDATEN (angepasst auf DP-Struktur)
-        // Hier kommen später die 1.500 Datensätze rein.
-        const dpData = [
-          {
-            "id": "1",
-            "Name": "Kowalski",
-            "Vorname": "Jan",
-            "Geburtsdatum": "12.04.1885",
-            "Geburtsort": "Warschau",
-            "Staatsangehoerigkeit": "Polnisch",
-            "Religion": "Katholisch",
-            "Familienstand": "Verwitwet",
-            "Beruf": "Tischler",
-            "Begleitpersonen": "-",
-            "Letzter_Aufenthalt": "DP Camp Maczków (Haren)",
-            "Zuzugsdatum": "15.08.1947",
-            "Adresse_Varel": "Altersheim Varel, Haus A",
-            "Abgangsdatum": "10.02.1950",
-            "Zielort": "Verstorben in Varel",
-            "Signatur": "NLA OL, Rep 400 Nr. 123",
-            "Anmerkung": "Gesundheitszustand bei Ankunft schlecht.",
-            "Koordinaten": [52.229, 21.012], // Geburtsort oder letzter Aufenthaltsort für die Karte
-            "Karten_Bezug": "Geburtsort"
-          },
-          {
-            "id": "2",
-            "Name": "Ivanov",
-            "Vorname": "Pjotr",
-            "Geburtsdatum": "03.09.1878",
-            "Geburtsort": "Kiew",
-            "Staatsangehoerigkeit": "Staatenlos (ehem. Ukrainisch/Sowjetisch)",
-            "Religion": "Orthodox",
-            "Familienstand": "Verheiratet",
-            "Beruf": "Landwirt",
-            "Begleitpersonen": "Ehefrau Maria Ivanova",
-            "Letzter_Aufenthalt": "Sammellager Oldenburg",
-            "Zuzugsdatum": "02.11.1946",
-            "Adresse_Varel": "Altersheim Varel, Baracke 3",
-            "Abgangsdatum": "14.05.1951",
-            "Zielort": "Auswanderung USA (New York)",
-            "Signatur": "NLA OL, Rep 400 Nr. 456",
-            "Anmerkung": "Auswanderung über IRO organisiert.",
-            "Koordinaten": [50.450, 30.523], // Kiew
-            "Karten_Bezug": "Geburtsort"
-          },
-          {
-             "id": "3",
-            "Name": "Kováč",
-            "Vorname": "Anna",
-            "Geburtsdatum": "22.11.1890",
-            "Geburtsort": "Bratislava",
-            "Staatsangehoerigkeit": "Tschechoslowakisch",
-            "Religion": "Katholisch",
-            "Familienstand": "Ledig",
-            "Beruf": "Schneiderin",
-            "Begleitpersonen": "-",
-            "Letzter_Aufenthalt": "Lager Wehnen",
-            "Zuzugsdatum": "05.01.1948",
-            "Adresse_Varel": "Altersheim Varel, Haus B",
-            "Abgangsdatum": "01.09.1949",
-            "Zielort": "Repatriierung Tschechoslowakei",
-            "Signatur": "NLA OL, Rep 400 Nr. 789",
-            "Anmerkung": "Auf eigenen Wunsch repatriiert.",
-            "Koordinaten": [48.148, 17.107], // Bratislava
-            "Karten_Bezug": "Geburtsort"
-          }
-        ];
-
-        // Marker-Ebene vorbereiten (später MarkerClusterGroup für 1500 Daten)
-        const markersLayer = L.featureGroup().addTo(map);
-
-        // Marker setzen
-        dpData.forEach(person => {
-            if (person.Koordinaten && person.Koordinaten.length === 2) {
-                
-                // Wir nutzen DivIcon für die Anpassung an das Farbschema
-                const customIcon = L.divIcon({
-                    className: '', 
-                    html: `<div class="dp-marker"></div>`,
-                    iconSize: [16, 16],
-                    iconAnchor: [8, 8] 
-                });
-
-                const marker = L.marker(person.Koordinaten, { icon: customIcon }); 
-
-                // Tooltip beim Hovern
-                marker.bindTooltip(`<b>${person.Vorname} ${person.Name}</b><br>Bezug: ${person.Karten_Bezug}`);
-
-                // Klick-Event öffnet die Sidebars
-                marker.on('click', () => {
-                    showDetails(person);
-                });
-
-                markersLayer.addLayer(marker);
-            }
+        const markersLayer = L.markerClusterGroup({
+            chunkedLoading: true, // Wichtig für 1500+ Marker
+            maxClusterRadius: 50
         });
 
-        // Karte auf alle Marker zentrieren
-        if(dpData.length > 0) {
-            map.fitBounds(markersLayer.getBounds(), { padding: [50, 50], maxZoom: 8 });
-        }
+        // Daten asynchron aus der JSON Datei laden
+        fetch('data.json')
+            .then(response => {
+                if (!response.ok) throw new Error("Netzwerkfehler beim Laden von data.json");
+                return response.json();
+            })
+            .then(data => {
+                data.forEach(person => {
+                    if (person.Koordinaten && person.Koordinaten.length === 2) {
+                        const customIcon = L.divIcon({
+                            className: '', html: `<div class="dp-marker"></div>`, iconSize: [16, 16], iconAnchor: [8, 8] 
+                        });
 
-        // --- UI LOGIK ---
+                        const marker = L.marker(person.Koordinaten, { icon: customIcon }); 
+                        marker.bindTooltip(`<b>${person.Vorname} ${person.Name}</b><br>${person.Geburtsort || 'Unbekannter Ort'}`);
+                        marker.on('click', () => showDetails(person));
+                        markersLayer.addLayer(marker);
+                    }
+                });
+                
+                map.addLayer(markersLayer);
+                if(data.length > 0) map.fitBounds(markersLayer.getBounds(), { padding: [50, 50], maxZoom: 8 });
+            })
+            .catch(error => console.error("Fehler beim Laden der Daten:", error));
 
         function showDetails(data) {
-            // Placeholder ausblenden, Daten-Container einblenden
-            document.getElementById('sidebar-placeholder').style.display = 'none';
-            document.getElementById('sidebar-data').style.display = 'block';
-            
             document.getElementById('sidebar-left-placeholder').style.display = 'none';
             document.getElementById('sidebar-left-data').style.display = 'block';
+            document.getElementById('sidebar-right-data').style.display = 'block';
 
-            // Linke Sidebar (Stammdaten) füllen
+            // Stammdaten (Links)
             document.getElementById('detail-name').innerText = `${data.Name}, ${data.Vorname}`;
             document.getElementById('detail-gebdatum').innerText = data.Geburtsdatum || '-';
-            document.getElementById('detail-gebort').innerText = data.Geburtsort || '-';
-            document.getElementById('detail-staat').innerText = data.Staatsangehoerigkeit || '-';
-            document.getElementById('detail-religion').innerText = data.Religion || '-';
-            document.getElementById('detail-famstand').innerText = data.Familienstand || '-';
+            document.getElementById('detail-todesdatum').innerText = data.Todesdatum || '-';
+            
+            let ortString = data.Geburtsort || '-';
+            if (data.Geburtskreis) ortString += ` (${data.Geburtskreis})`;
+            document.getElementById('detail-gebort').innerText = ortString;
+            
+            document.getElementById('detail-staat').innerText = data.Staatsangehörigkeit || '-';
+            document.getElementById('detail-religion').innerText = data.Glaubensbekenntnis || '-';
             document.getElementById('detail-beruf').innerText = data.Beruf || '-';
-            document.getElementById('detail-familie').innerText = data.Begleitpersonen || '-';
+            document.getElementById('detail-famstand').innerText = data.Familienstand || '-';
+            document.getElementById('detail-verheiratet').innerText = data.Verheiratet_mit || '-';
 
-            // Rechte Sidebar (Lagerdaten) füllen
-            document.getElementById('detail-vorher').innerText = data.Letzter_Aufenthalt || '-';
-            document.getElementById('detail-zuzug').innerText = data.Zuzugsdatum || '-';
-            document.getElementById('detail-adresse').innerText = data.Adresse_Varel || '-';
-            document.getElementById('detail-abgangsdatum').innerText = data.Abgangsdatum || '-';
-            document.getElementById('detail-ziel').innerText = data.Zielort || '-';
-            document.getElementById('detail-quelle').innerText = data.Signatur || '-';
-            document.getElementById('detail-anmerkung').innerText = data.Anmerkung || '-';
+            // Meldedaten (Rechts)
+            document.getElementById('detail-iro').innerText = data.IRO_Nummer || '-';
+            document.getElementById('detail-dp').innerText = data.DP_Nummer || '-';
+            document.getElementById('detail-abwnummern').innerText = data.Abweichende_Nummern || '-';
+            document.getElementById('detail-infos').innerText = data.Weitere_Infos || '-';
 
-            // Sidebars einfahren
-            document.getElementById('sidebar').classList.add('active');
+            // Aufenthalte formatieren (Array zu HTML)
+            let aufenthaltHtml = "";
+            if (data.Aufenthalte && data.Aufenthalte.length > 0) {
+                data.Aufenthalte.forEach(st => {
+                    aufenthaltHtml += `<div style="margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #eee;">
+                        <b>Ort:</b> ${st.Ort}<br>
+                        <b>Zuzug:</b> ${st.Zuzug || '?'} &nbsp;|&nbsp; <b>Abzug:</b> ${st.Abzug || '?'}
+                    </div>`;
+                });
+            } else {
+                aufenthaltHtml = "-";
+            }
+            document.getElementById('detail-aufenthalte').innerHTML = aufenthaltHtml;
+
             document.getElementById('sidebar-left').classList.add('active');
+            document.getElementById('sidebar-right').classList.add('active');
         }
 
         function closeSidebar() {
-            // Sidebars ausfahren
-            document.getElementById('sidebar').classList.remove('active');
             document.getElementById('sidebar-left').classList.remove('active');
+            document.getElementById('sidebar-right').classList.remove('active');
         }
     </script>
 </body>
