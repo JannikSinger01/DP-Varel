@@ -5,13 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Varel DP-Database - Displaced Persons</title>
     
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- MarkerCluster CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
 
     <style>
         :root {
-            var(--primary-color): #2b6a6c; 
+            /* Farbschema basierend auf der Vorlage */
+            --primary-color: #2b6a6c; 
             --secondary-color: #4db4b8; 
             --bg-color: #f4f7f6; 
             --text-color: #2c3e50;
@@ -41,24 +44,26 @@
         #sidebar-left.active { transform: translateX(0); }
         #sidebar-right.active { transform: translateX(0); }
 
-        .sidebar-header { padding: 25px 20px; background-color: #2b6a6c; color: white; display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header { padding: 25px 20px; background-color: var(--primary-color); color: white; display: flex; justify-content: space-between; align-items: center; }
         .sidebar-header h2 { font-size: 1.3rem; font-weight: 600; margin: 0; }
         .close-btn { background: none; border: none; font-size: 1.8rem; cursor: pointer; color: rgba(255,255,255,0.8); line-height: 1; transition: color 0.2s; }
         .close-btn:hover { color: white; }
 
         .sidebar-content { padding: 25px; overflow-y: auto; flex-grow: 1; background-color: var(--bg-color); }
         .data-card { background: white; border-radius: 6px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); border: 1px solid #e1e8ed; }
-        .data-card h3 { font-size: 1rem; color: #2b6a6c; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 2px solid #4db4b8; display: inline-block; }
+        .data-card h3 { font-size: 1rem; color: var(--primary-color); margin-bottom: 15px; padding-bottom: 5px; border-bottom: 2px solid var(--secondary-color); display: inline-block; }
         
         .data-group { margin-bottom: 12px; display: flex; flex-direction: column; }
         .data-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #7f8c8d; margin-bottom: 3px; font-weight: 600; }
-        .data-value { font-size: 1rem; line-height: 1.4; color: #2c3e50; }
+        .data-value { font-size: 1rem; line-height: 1.4; color: var(--text-color); }
 
         .placeholder-text { padding: 40px 20px; color: #7f8c8d; text-align: center; font-size: 1.1rem; }
 
-        /* Marker Stil */
-        .dp-marker { width: 16px; height: 16px; background-color: #4db4b8; border: 2px solid white; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); transition: transform 0.2s, background-color 0.2s; }
-        .dp-marker:hover { transform: scale(1.2); background-color: #2b6a6c; z-index: 1000 !important; }
+        /* Marker Stile für unterschiedliche Layer */
+        .dp-marker { width: 16px; height: 16px; border: 2px solid white; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); transition: transform 0.2s; }
+        .dp-marker:hover { transform: scale(1.3); z-index: 1000 !important; }
+        .marker-geburt { background-color: var(--secondary-color); } /* Türkis für Geburt */
+        .marker-tod { background-color: var(--primary-color); } /* Dunkles Teal für Tod */
     </style>
 </head>
 <body>
@@ -86,13 +91,12 @@
                     <div class="data-group"><span class="data-label">Glaubensbekenntnis</span><div class="data-value" id="detail-religion">-</div></div>
                     <div class="data-group"><span class="data-label">Beruf</span><div class="data-value" id="detail-beruf">-</div></div>
                     <div class="data-group"><span class="data-label">Familienstand</span><div class="data-value" id="detail-famstand">-</div></div>
-                    <div class="data-group"><span class="data-label">Verheiratet mit</span><div class="data-value" id="detail-verheiratet">-</div></div>
                 </div>
             </div>
             <div class="placeholder-text" id="sidebar-left-placeholder">Bitte wählen Sie eine Person auf der Karte aus.</div>
         </div>
 
-        <!-- RECHTE SIDEBAR (Meldedaten) -->
+        <!-- RECHTE SIDEBAR (Melde- und Lagerdaten) -->
         <div id="sidebar-right" class="sidebar">
             <div class="sidebar-header">
                 <h2>Administration & Aufenthalte</h2>
@@ -103,10 +107,9 @@
                     <h3>Registrierungsnummern</h3>
                     <div class="data-group"><span class="data-label">IRO Nummer</span><div class="data-value" id="detail-iro">-</div></div>
                     <div class="data-group"><span class="data-label">DP Nummer</span><div class="data-value" id="detail-dp">-</div></div>
-                    <div class="data-group"><span class="data-label">Abweichende Nummern</span><div class="data-value" id="detail-abwnummern">-</div></div>
                 </div>
                 <div class="data-card">
-                    <h3>Aufenthalte (Zuzug / Ort / Abzug)</h3>
+                    <h3>Aufenthalte</h3>
                     <div class="data-value" id="detail-aufenthalte" style="font-size: 0.9rem;">-</div>
                 </div>
                 <div class="data-card">
@@ -117,80 +120,113 @@
         </div>
     </div>
 
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- MarkerCluster JS -->
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 
     <script>
-        const map = L.map('map').setView([53.396, 8.136], 6); 
+        // Startansicht auf Mitteleuropa zentriert (deckt grob Raum zwischen Varel und dem Baltikum ab)
+        const map = L.map('map').setView([53.0, 15.0], 5); 
 
+        // Helle, neutrale Basiskarte für historische Daten
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
             maxZoom: 19
         }).addTo(map);
 
-        const markersLayer = L.markerClusterGroup({
-            chunkedLoading: true, // Wichtig für 1500+ Marker
-            maxClusterRadius: 50
-        });
+        // Zwei separate Layer-Gruppen für das Filtern (Clustering aktiviert)
+        const geburtsLayer = L.markerClusterGroup({ chunkedLoading: true, maxClusterRadius: 40 });
+        const todesLayer = L.markerClusterGroup({ chunkedLoading: true, maxClusterRadius: 40 });
 
-        // Daten asynchron aus der JSON Datei laden
+        // Layer-Kontrolle oben rechts (Filter-Menü der Karte)
+        const overlayMaps = {
+            "Geburtsorte anzeigen": geburtsLayer,
+            "Todesorte anzeigen": todesLayer
+        };
+        L.control.layers(null, overlayMaps, { collapsed: false }).addTo(map);
+
+        // HINWEIS: Die Karte startet standardmäßig leer. 
+        // Der Nutzer muss in der Layer-Kontrolle rechts oben aktiv einen Haken setzen.
+
+        // Jitter-Funktion: Addiert eine kleine zufällige Abweichung (Streuung) auf die Koordinaten
+        // Faktor 0.015 entspricht grob 1 bis 2 Kilometern in Mitteleuropa
+        function applyJitter(coords, factor = 0.015) {
+            const latJitter = (Math.random() - 0.5) * factor;
+            const lngJitter = (Math.random() - 0.5) * factor;
+            return [coords[0] + latJitter, coords[1] + lngJitter];
+        }
+
+        // JSON-Daten asynchron laden
         fetch('data.json')
             .then(response => {
-                if (!response.ok) throw new Error("Netzwerkfehler beim Laden von data.json");
+                if (!response.ok) {
+                    throw new Error("Fehler beim Laden der data.json");
+                }
                 return response.json();
             })
             .then(data => {
                 data.forEach(person => {
-                    if (person.Koordinaten && person.Koordinaten.length === 2) {
-                        const customIcon = L.divIcon({
-                            className: '', html: `<div class="dp-marker"></div>`, iconSize: [16, 16], iconAnchor: [8, 8] 
+                    // 1. Verarbeitung Geburtsorte
+                    if (person.Geburtsort_Koordinaten && person.Geburtsort_Koordinaten.length === 2) {
+                        const iconGeburt = L.divIcon({
+                            className: '', html: `<div class="dp-marker marker-geburt"></div>`, iconSize: [16, 16], iconAnchor: [8, 8] 
                         });
+                        // Streuung (Jitter) anwenden
+                        const jitteredGeburt = applyJitter(person.Geburtsort_Koordinaten);
+                        const markerGeburt = L.marker(jitteredGeburt, { icon: iconGeburt }); 
+                        
+                        markerGeburt.bindTooltip(`<b>${person.Vorname} ${person.Name}</b><br>Geburtsort: ${person.Geburtsort}`);
+                        markerGeburt.on('click', () => showDetails(person));
+                        geburtsLayer.addLayer(markerGeburt);
+                    }
 
-                        const marker = L.marker(person.Koordinaten, { icon: customIcon }); 
-                        marker.bindTooltip(`<b>${person.Vorname} ${person.Name}</b><br>${person.Geburtsort || 'Unbekannter Ort'}`);
-                        marker.on('click', () => showDetails(person));
-                        markersLayer.addLayer(marker);
+                    // 2. Verarbeitung Todesorte
+                    if (person.Todesort_Koordinaten && person.Todesort_Koordinaten.length === 2) {
+                        const iconTod = L.divIcon({
+                            className: '', html: `<div class="dp-marker marker-tod"></div>`, iconSize: [16, 16], iconAnchor: [8, 8] 
+                        });
+                        // Streuung (Jitter) anwenden
+                        const jitteredTod = applyJitter(person.Todesort_Koordinaten);
+                        const markerTod = L.marker(jitteredTod, { icon: iconTod }); 
+                        
+                        markerTod.bindTooltip(`<b>${person.Vorname} ${person.Name}</b><br>Todesort`);
+                        markerTod.on('click', () => showDetails(person));
+                        todesLayer.addLayer(markerTod);
                     }
                 });
-                
-                map.addLayer(markersLayer);
-                if(data.length > 0) map.fitBounds(markersLayer.getBounds(), { padding: [50, 50], maxZoom: 8 });
             })
-            .catch(error => console.error("Fehler beim Laden der Daten:", error));
+            .catch(error => console.error("Datenverarbeitungsfehler:", error));
 
+        // Funktion zum Befüllen und Öffnen der Sidebars
         function showDetails(data) {
+            // Platzhalter ausblenden, Daten-Container einblenden
             document.getElementById('sidebar-left-placeholder').style.display = 'none';
             document.getElementById('sidebar-left-data').style.display = 'block';
             document.getElementById('sidebar-right-data').style.display = 'block';
 
-            // Stammdaten (Links)
+            // Stammdaten links befüllen
             document.getElementById('detail-name').innerText = `${data.Name}, ${data.Vorname}`;
             document.getElementById('detail-gebdatum').innerText = data.Geburtsdatum || '-';
             document.getElementById('detail-todesdatum').innerText = data.Todesdatum || '-';
-            
-            let ortString = data.Geburtsort || '-';
-            if (data.Geburtskreis) ortString += ` (${data.Geburtskreis})`;
-            document.getElementById('detail-gebort').innerText = ortString;
-            
+            document.getElementById('detail-gebort').innerText = data.Geburtsort || '-';
             document.getElementById('detail-staat').innerText = data.Staatsangehörigkeit || '-';
             document.getElementById('detail-religion').innerText = data.Glaubensbekenntnis || '-';
             document.getElementById('detail-beruf').innerText = data.Beruf || '-';
             document.getElementById('detail-famstand').innerText = data.Familienstand || '-';
-            document.getElementById('detail-verheiratet').innerText = data.Verheiratet_mit || '-';
-
-            // Meldedaten (Rechts)
+            
+            // Administrationsdaten rechts befüllen
             document.getElementById('detail-iro').innerText = data.IRO_Nummer || '-';
             document.getElementById('detail-dp').innerText = data.DP_Nummer || '-';
-            document.getElementById('detail-abwnummern').innerText = data.Abweichende_Nummern || '-';
             document.getElementById('detail-infos').innerText = data.Weitere_Infos || '-';
 
-            // Aufenthalte formatieren (Array zu HTML)
+            // Aufenthaltsorte strukturieren
             let aufenthaltHtml = "";
             if (data.Aufenthalte && data.Aufenthalte.length > 0) {
                 data.Aufenthalte.forEach(st => {
-                    aufenthaltHtml += `<div style="margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #eee;">
+                    aufenthaltHtml += `<div style="margin-bottom: 8px; border-bottom: 1px solid #eee;">
                         <b>Ort:</b> ${st.Ort}<br>
-                        <b>Zuzug:</b> ${st.Zuzug || '?'} &nbsp;|&nbsp; <b>Abzug:</b> ${st.Abzug || '?'}
+                        <b>Zeitraum:</b> ${st.Zuzug || '?'} - ${st.Abzug || '?'}
                     </div>`;
                 });
             } else {
@@ -198,10 +234,12 @@
             }
             document.getElementById('detail-aufenthalte').innerHTML = aufenthaltHtml;
 
+            // Sidebars hereinschieben
             document.getElementById('sidebar-left').classList.add('active');
             document.getElementById('sidebar-right').classList.add('active');
         }
 
+        // Funktion zum Schließen der Sidebars
         function closeSidebar() {
             document.getElementById('sidebar-left').classList.remove('active');
             document.getElementById('sidebar-right').classList.remove('active');
