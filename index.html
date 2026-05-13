@@ -29,6 +29,21 @@
         }
         .filter-group { margin-bottom: 10px; }
         input[type="text"] { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        button.btn { background: var(--primary-color); color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 10px; }
+        button.btn:hover { background: var(--secondary-color); }
+
+        /* Personenliste Overlay */
+        #list-overlay {
+            display: none; position: absolute; top: 20px; left: 320px; right: 20px; bottom: 20px;
+            background: white; z-index: 3000; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            flex-direction: column; overflow: hidden;
+        }
+        .list-header { padding: 15px; background: var(--primary-color); color: white; display: flex; justify-content: space-between; align-items: center; }
+        .list-content { overflow-y: auto; padding: 15px; flex-grow: 1; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f9f9f9; position: sticky; top: 0; z-index: 10; }
+        tr:hover { background-color: #f1f5f5; cursor: pointer; }
 
         /* Sidebars */
         .sidebar {
@@ -60,7 +75,30 @@
             <label class="label">Personensuche</label>
             <input type="text" id="search-input" placeholder="Name, Vorname oder ID..." oninput="filterData()">
         </div>
-        <div id="stats" style="font-size: 0.8rem; color: #666;">Initialisiere Karte...</div>
+        <div id="stats" style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">Initialisiere Karte...</div>
+        <button class="btn" onclick="toggleList()">&#9776; Personenliste anzeigen</button>
+    </div>
+
+    <div id="list-overlay">
+        <div class="list-header">
+            <h2 id="list-title">Alle Personen</h2>
+            <button onclick="toggleList()" style="color:white; background:none; border:none; cursor:pointer; font-size:1.5rem;">&times;</button>
+        </div>
+        <div class="list-content">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nummer</th>
+                        <th>Name</th>
+                        <th>Vorname</th>
+                        <th>Geburtsdatum</th>
+                        <th>Geburtsort</th>
+                        <th>Status (Karte)</th>
+                    </tr>
+                </thead>
+                <tbody id="list-tbody"></tbody>
+            </table>
+        </div>
     </div>
 
     <div id="map"></div>
@@ -118,7 +156,13 @@
             .then(data => {
                 allData = data;
                 renderMarkers(data);
-                document.getElementById('stats').innerHTML = `<b>${data.length} Personen geladen.</b><br>Bitte rechts oben die Layer aktivieren!`;
+                renderList(data);
+                
+                // Statistische Analyse der fehlenden Geodaten
+                const missingCoords = data.filter(p => !p.Geburtsort_Koordinaten).length;
+                document.getElementById('stats').innerHTML = `<b>${data.length} Personen geladen.</b><br>
+                    <span style="color: #c0392b;">${missingCoords} Orte nicht lokalisierbar.</span><br>
+                    Bitte rechts oben die Layer aktivieren!`;
             })
             .catch(error => {
                 console.error("Datenladefehler:", error);
@@ -155,10 +199,48 @@
             const filtered = allData.filter(p => 
                 (p.Name && p.Name.toLowerCase().includes(val)) || 
                 (p.Vorname && p.Vorname.toLowerCase().includes(val)) || 
-                (p.Nummer && p.Nummer.includes(val))
+                (p.Nummer && p.Nummer.includes(val)) ||
+                (p.Geburtsort && p.Geburtsort.toLowerCase().includes(val))
             );
             renderMarkers(filtered);
+            renderList(filtered);
             document.getElementById('stats').innerHTML = `<b>${filtered.length} Treffer.</b><br>Bitte rechts oben die Layer aktivieren!`;
+        }
+
+        // Neue Listen-Funktionen
+        function toggleList() {
+            const list = document.getElementById('list-overlay');
+            list.style.display = (list.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        function renderList(data) {
+            const tbody = document.getElementById('list-tbody');
+            document.getElementById('list-title').innerText = `Personenliste (${data.length} Einträge)`;
+            
+            tbody.innerHTML = data.map(p => {
+                // Zeigt an, ob die API Koordinaten für diesen Ort gefunden hat
+                const status = p.Geburtsort_Koordinaten ? '<span style="color: #27ae60; font-weight: bold;">Geokodiert</span>' : '<span style="color: #c0392b; font-weight: bold;">Fehlt auf Karte</span>';
+                return `
+                    <tr onclick='showPersonById("${p.Nummer}")'>
+                        <td>${p.Nummer || '-'}</td>
+                        <td><b>${p.Name || '-'}</b></td>
+                        <td>${p.Vorname || '-'}</td>
+                        <td>${p.Geburtsdatum || '-'}</td>
+                        <td>${p.Geburtsort || '-'}</td>
+                        <td>${status}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function showPersonById(nummer) {
+            // Findet die Person sicher anhand der ID und öffnet die Sidebar
+            const p = allData.find(x => String(x.Nummer) === String(nummer));
+            if (p) {
+                showPerson(p);
+                // Liste auf kleinen Bildschirmen automatisch schließen für bessere UX
+                if (window.innerWidth < 1000) toggleList(); 
+            }
         }
 
         // Sidebar füllen und öffnen
