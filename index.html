@@ -94,6 +94,7 @@
                         <th onclick="sortList('Vorname')" title="Nach Vorname sortieren">Vorname &#8693;</th>
                         <th onclick="sortList('Geburtsdatum')" title="Nach Geburtsdatum sortieren">Geburtsdatum &#8693;</th>
                         <th onclick="sortList('Geburtsort')" title="Nach Geburtsort sortieren">Geburtsort &#8693;</th>
+                        <th onclick="sortList('Staatsangehörigkeit')" title="Nach Nationalität sortieren">Nationalität &#8693;</th>
                         <th onclick="sortList('Status')" title="Nach Status sortieren">Status (Karte) &#8693;</th>
                     </tr>
                 </thead>
@@ -273,6 +274,7 @@
                         <td>${p.Vorname || '-'}</td>
                         <td>${p.Geburtsdatum || '-'}</td>
                         <td>${p.Geburtsort || '-'}</td>
+                        <td>${p.Staatsangehörigkeit || '-'}</td>
                         <td>${status}</td>
                     </tr>
                 `;
