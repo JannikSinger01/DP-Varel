@@ -42,7 +42,8 @@
         .list-content { overflow-y: auto; padding: 15px; flex-grow: 1; }
         table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background: #f9f9f9; position: sticky; top: 0; z-index: 10; }
+        th { background: #f9f9f9; position: sticky; top: 0; z-index: 10; cursor: pointer; user-select: none; }
+        th:hover { background: #e0e0e0; }
         tr:hover { background-color: #f1f5f5; cursor: pointer; }
 
         /* Sidebars */
@@ -88,12 +89,12 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Nummer</th>
-                        <th>Name</th>
-                        <th>Vorname</th>
-                        <th>Geburtsdatum</th>
-                        <th>Geburtsort</th>
-                        <th>Status (Karte)</th>
+                        <th onclick="sortList('Nummer')" title="Nach Nummer sortieren">Nummer &#8693;</th>
+                        <th onclick="sortList('Name')" title="Nach Name sortieren">Name &#8693;</th>
+                        <th onclick="sortList('Vorname')" title="Nach Vorname sortieren">Vorname &#8693;</th>
+                        <th onclick="sortList('Geburtsdatum')" title="Nach Geburtsdatum sortieren">Geburtsdatum &#8693;</th>
+                        <th onclick="sortList('Geburtsort')" title="Nach Geburtsort sortieren">Geburtsort &#8693;</th>
+                        <th onclick="sortList('Status')" title="Nach Status sortieren">Status (Karte) &#8693;</th>
                     </tr>
                 </thead>
                 <tbody id="list-tbody"></tbody>
@@ -140,6 +141,9 @@
         L.control.layers(null, overlayMaps, { collapsed: false }).addTo(map);
 
         let allData = [];
+        let currentListData = []; // Speichert die aktuell gefilterte Liste für die Sortierung
+        let currentSortCol = '';
+        let currentSortAsc = true;
 
         // Funktion um überlappende Koordinaten leicht zu verschieben
         function applyJitter(coords) {
@@ -155,8 +159,9 @@
             })
             .then(data => {
                 allData = data;
+                currentListData = [...data]; // Initial befüllen
                 renderMarkers(data);
-                renderList(data);
+                renderList(currentListData);
                 
                 // Statistische Analyse der fehlenden Geodaten
                 const missingCoords = data.filter(p => !p.Geburtsort_Koordinaten).length;
@@ -196,15 +201,56 @@
         // Suchfunktion
         function filterData() {
             const val = document.getElementById('search-input').value.toLowerCase();
-            const filtered = allData.filter(p => 
+            currentListData = allData.filter(p => 
                 (p.Name && p.Name.toLowerCase().includes(val)) || 
                 (p.Vorname && p.Vorname.toLowerCase().includes(val)) || 
                 (p.Nummer && p.Nummer.includes(val)) ||
                 (p.Geburtsort && p.Geburtsort.toLowerCase().includes(val))
             );
-            renderMarkers(filtered);
-            renderList(filtered);
-            document.getElementById('stats').innerHTML = `<b>${filtered.length} Treffer.</b><br>Bitte rechts oben die Layer aktivieren!`;
+            
+            if (currentSortCol) performSort(); // Aktive Sortierung beibehalten
+            
+            renderMarkers(currentListData);
+            renderList(currentListData);
+            document.getElementById('stats').innerHTML = `<b>${currentListData.length} Treffer.</b><br>Bitte rechts oben die Layer aktivieren!`;
+        }
+
+        // Tabellensortierung
+        function sortList(col) {
+            if (currentSortCol === col) {
+                currentSortAsc = !currentSortAsc; // Sortierrichtung umkehren
+            } else {
+                currentSortCol = col;
+                currentSortAsc = true; // Aufsteigend als Standard
+            }
+            performSort();
+            renderList(currentListData);
+        }
+
+        function performSort() {
+            currentListData.sort((a, b) => {
+                let valA, valB;
+                
+                // Spezifische Behandlung für Status (Fehlende Geodaten vs. Geokodiert)
+                if (currentSortCol === 'Status') {
+                    valA = a.Geburtsort_Koordinaten ? 1 : 0;
+                    valB = b.Geburtsort_Koordinaten ? 1 : 0;
+                } 
+                // Spezifische Behandlung für Nummern (verhindert, dass "10" vor "2" sortiert wird)
+                else if (currentSortCol === 'Nummer') {
+                    valA = parseInt(a.Nummer) || 0;
+                    valB = parseInt(b.Nummer) || 0;
+                } 
+                // Standard-Text-Sortierung
+                else {
+                    valA = (a[currentSortCol] || '').toLowerCase();
+                    valB = (b[currentSortCol] || '').toLowerCase();
+                }
+
+                if (valA < valB) return currentSortAsc ? -1 : 1;
+                if (valA > valB) return currentSortAsc ? 1 : -1;
+                return 0;
+            });
         }
 
         // Neue Listen-Funktionen
