@@ -66,6 +66,30 @@
         .marker-geburt { background-color: var(--secondary-color); width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); transition: transform 0.2s; }
         .marker-tod { background-color: var(--primary-color); width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); transition: transform 0.2s; }
         .marker-geburt:hover, .marker-tod:hover { transform: scale(1.3); z-index: 1000 !important; }
+        
+        /* Tutorial Overlay Modal */
+        #tutorial-overlay {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6); z-index: 4000; align-items: center; justify-content: center;
+            backdrop-filter: blur(3px); /* Leichter Unschärfe-Effekt für den Hintergrund */
+        }
+        .tutorial-modal {
+            background: white; border-radius: 8px; width: 90%; max-width: 700px; max-height: 85vh;
+            display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .tutorial-header { 
+            padding: 15px 20px; background: var(--primary-color); color: white; 
+            display: flex; justify-content: space-between; align-items: center; border-radius: 8px 8px 0 0; 
+        }
+        .tutorial-content { 
+            padding: 25px; overflow-y: auto; line-height: 1.6; 
+        }
+        .tutorial-content h3 { 
+            color: var(--primary-color); margin-top: 20px; margin-bottom: 10px; 
+            border-bottom: 1px solid #eee; padding-bottom: 5px; 
+        }
+        .tutorial-content ul { padding-left: 25px; margin-bottom: 15px; }
+        .tutorial-content li { margin-bottom: 8px; }
     </style>
 </head>
 <body>
@@ -78,6 +102,47 @@
         </div>
         <div id="stats" style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">Initialisiere Karte...</div>
         <button class="btn" onclick="toggleList()">&#9776; Personenliste anzeigen</button>
+        <button class="btn" style="background: var(--secondary-color); margin-top: 5px;" onclick="toggleTutorial()">&#10068; Anleitung / Tutorial</button>
+    </div>
+
+    <!-- Tutorial Overlay Container -->
+    <div id="tutorial-overlay" onclick="if(event.target === this) toggleTutorial()">
+        <div class="tutorial-modal">
+            <div class="tutorial-header">
+                <h2>&#10068; Wie funktioniert diese App?</h2>
+                <button onclick="toggleTutorial()" style="color:white; background:none; border:none; cursor:pointer; font-size:1.5rem;" title="Schließen">&times;</button>
+            </div>
+            <div class="tutorial-content">
+                <p>Willkommen in der Varel DP-Database! Diese Web-Anwendung dient der interaktiven Visualisierung und Analyse historischer Personendaten auf einer Karte.</p>
+                
+                <h3>1. Die Kartenansicht & Ebenen (Layer)</h3>
+                <ul>
+                    <li><strong>Layer aktivieren (Wichtig!):</strong> Oben rechts auf der Karte befindet sich ein Ebenen-Menü. Setzen Sie dort zwingend ein Häkchen bei <em>"Geburtsorte anzeigen"</em> und/oder <em>"Todesorte anzeigen"</em>.</li>
+                    <li><strong>Navigation:</strong> Sie können die Karte mit der Maus verschieben und mit den Tasten <code>+</code> und <code>-</code> unten rechts (oder dem Mausrad) zoomen.</li>
+                    <li><strong>Cluster:</strong> Farbige Kreise mit Zahlen fassen mehrere Personen an einem Ort zusammen. Klicken Sie darauf, um automatisch in diese Region hineinzuzoomen.</li>
+                </ul>
+
+                <h3>2. Das Filter-Panel (Oben Links)</h3>
+                <ul>
+                    <li><strong>Personensuche:</strong> Suchen Sie in Echtzeit nach Namen, Vornamen, IDs oder Geburtsorten. Die Karte passt sich sofort an.</li>
+                    <li><strong>Dynamische Statistik:</strong> Zeigt an, wie viele Personen aktuell gefunden wurden und wie viele Orte nicht auf der Karte darstellbar sind (da historische Koordinaten fehlen).</li>
+                </ul>
+
+                <h3>3. Die tabellarische Personenliste</h3>
+                <ul>
+                    <li>Klicken Sie auf <em>"Personenliste anzeigen"</em>, um alle aktuellen Suchtreffer als übersichtliche Tabelle zu sehen.</li>
+                    <li><strong>Sortierung:</strong> Klicken Sie auf die Spaltenüberschriften (z. B. Name, Geburtsdatum), um die Liste alphabetisch oder chronologisch zu sortieren.</li>
+                    <li><strong>Status:</strong> Sehen Sie in der rechten Spalte auf einen Blick, ob eine Person geokodiert (auf der Karte sichtbar) ist oder ob sie fehlt.</li>
+                </ul>
+
+                <h3>4. Die Detailansicht</h3>
+                <ul>
+                    <li>Klicken Sie auf einen Marker auf der Karte <strong>oder</strong> auf eine Zeile in der Personenliste, um detaillierte Informationen zu öffnen.</li>
+                    <li><strong>Linke Sidebar:</strong> Zeigt die Stammdaten der Person (Name, Geburtsdaten, Nationalität, Beruf).</li>
+                    <li><strong>Rechte Sidebar:</strong> Zeigt die chronologische Aufenthalts- und Migrationsgeschichte der Person als Karten (Cards).</li>
+                </ul>
+            </div>
+        </div>
     </div>
 
     <div id="list-overlay">
@@ -258,6 +323,12 @@
         function toggleList() {
             const list = document.getElementById('list-overlay');
             list.style.display = (list.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        // Neue Tutorial-Funktion
+        function toggleTutorial() {
+            const tut = document.getElementById('tutorial-overlay');
+            tut.style.display = (tut.style.display === 'flex') ? 'none' : 'flex';
         }
 
         function renderList(data) {
