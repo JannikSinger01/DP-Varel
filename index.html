@@ -3,427 +3,473 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Varel DP-Database - Prosopografische Analyse</title>
+    <title>Varel DP-Database</title>
+
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Leaflet MarkerCluster CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+
     <style>
         :root {
-            --primary-color: #2b6a6c; 
-            --secondary-color: #4db4b8; 
-            --bg-color: #f4f7f6;
-            --text-color: #2c3e50; 
-            --sidebar-width: 450px;
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f8f9fa;
+            --sidebar-width: 350px;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', sans-serif; color: var(--text-color); background: var(--bg-color); overflow: hidden; display: flex; }
-        
-        #map { flex-grow: 1; height: 100vh; z-index: 1; }
-        
-        /* Filter-Panel oben links */
-        #filter-panel {
-            position: absolute; top: 20px; left: 20px; z-index: 1000;
-            background: white; padding: 15px; border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 280px;
-        }
-        .filter-group { margin-bottom: 10px; }
-        input[type="text"] { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-        button.btn { background: var(--primary-color); color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 10px; }
-        button.btn:hover { background: var(--secondary-color); }
 
-        /* Personenliste Overlay */
-        #list-overlay {
-            display: none; position: absolute; top: 20px; left: 320px; right: 20px; bottom: 20px;
-            background: white; z-index: 3000; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            flex-direction: column; overflow: hidden;
+        body, html {
+            margin: 0; padding: 0; height: 100%; width: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            overflow: hidden;
         }
-        .list-header { padding: 15px; background: var(--primary-color); color: white; display: flex; justify-content: space-between; align-items: center; }
-        .list-content { overflow-y: auto; padding: 15px; flex-grow: 1; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background: #f9f9f9; position: sticky; top: 0; z-index: 10; cursor: pointer; user-select: none; }
-        th:hover { background: #e0e0e0; }
-        tr:hover { background-color: #f1f5f5; cursor: pointer; }
 
-        /* Sidebars */
+        /* Karte nimmt den ganzen Bildschirm ein */
+        #map {
+            width: 100vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        /* UI Panel oben links */
+        #ui-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 320px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            z-index: 1000; /* Über der Karte */
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        #ui-panel h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+
+        #search-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+
+        #status-text {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        /* Tutorial Button */
+        #tutorial-btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        #tutorial-btn:hover { background-color: #2980b9; }
+
+        /* Sidebars Links & Rechts */
         .sidebar {
-            width: var(--sidebar-width); height: 100vh; background: white;
-            position: fixed; top: 0; transition: transform 0.3s ease; z-index: 2000;
-            display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            width: var(--sidebar-width); 
+            height: 100vh; 
+            background: white;
+            position: fixed; 
+            top: 0; 
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
+            z-index: 9999;
+            display: flex; 
+            flex-direction: column; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
         }
-        #sidebar-left { left: 0; transform: translateX(-100%); }
-        #sidebar-right { right: 0; transform: translateX(100%); }
         
-        /* FIX: Höhere CSS-Spezifität, damit das Ausfahren erzwungen wird */
-        #sidebar-left.active, #sidebar-right.active { transform: translateX(0); }
+        #sidebar-left { left: calc(-1 * var(--sidebar-width)); }
+        #sidebar-right { right: calc(-1 * var(--sidebar-width)); }
         
-        .sidebar-header { padding: 20px; background: var(--primary-color); color: white; display: flex; justify-content: space-between; align-items: center; }
-        .sidebar-content { padding: 20px; overflow-y: auto; flex-grow: 1; }
-        .card { background: #f9f9f9; padding: 15px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid var(--secondary-color); }
-        .label { font-size: 0.75rem; color: #7f8c8d; text-transform: uppercase; font-weight: bold; }
-        .value { font-size: 1rem; margin-bottom: 8px; }
+        /* Absolut sichere Methode für das Ausfahren */
+        #sidebar-left.active { left: 0 !important; }
+        #sidebar-right.active { right: 0 !important; }
 
-        /* Tutorial Overlay Modal */
-        #tutorial-overlay {
-            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6); z-index: 4000; align-items: center; justify-content: center;
-            backdrop-filter: blur(3px); /* Leichter Unschärfe-Effekt für den Hintergrund */
+        .sidebar-header { 
+            padding: 20px; 
+            background: var(--primary-color); 
+            color: white; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
         }
-        .tutorial-modal {
-            background: white; border-radius: 8px; width: 90%; max-width: 700px; max-height: 85vh;
-            display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        
+        .sidebar-header h3 { margin: 0; font-size: 1.1rem; }
+        
+        .close-btn {
+            background: none; border: none; color: white; font-size: 1.5rem;
+            cursor: pointer; line-height: 1; padding: 0 5px;
         }
-        .tutorial-header { 
-            padding: 15px 20px; background: var(--primary-color); color: white; 
-            display: flex; justify-content: space-between; align-items: center; border-radius: 8px 8px 0 0; 
+        
+        .close-btn:hover { color: #ccc; }
+
+        .sidebar-content {
+            padding: 20px;
+            overflow-y: auto;
+            flex-grow: 1;
+            background: #f4f7f6;
         }
-        .tutorial-content { 
-            padding: 25px; overflow-y: auto; line-height: 1.6; 
+
+        /* Cards für Personendaten */
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--accent-color);
         }
-        .tutorial-content h3 { 
-            color: var(--primary-color); margin-top: 20px; margin-bottom: 10px; 
-            border-bottom: 1px solid #eee; padding-bottom: 5px; 
+
+        .label { font-size: 0.8rem; color: #888; text-transform: uppercase; margin-bottom: 3px; }
+        .value { font-size: 1rem; color: #333; margin-bottom: 10px; word-wrap: break-word; }
+        .value:last-child { margin-bottom: 0; }
+
+        /* Marker Styles für den Tooltip (falls benötigt) */
+        .leaflet-tooltip.custom-tooltip {
+            background: rgba(255,255,255,0.9);
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            color: #333;
+            font-weight: bold;
         }
-        .tutorial-content ul { padding-left: 25px; margin-bottom: 15px; }
-        .tutorial-content li { margin-bottom: 8px; }
+
+        /* Tutorial Modal */
+        #tutorial-modal {
+            display: none;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.6); z-index: 10000;
+            justify-content: center; align-items: center;
+        }
+        #tutorial-modal.active { display: flex; }
+        .tutorial-content {
+            background: white; width: 600px; max-width: 90%; max-height: 80vh;
+            border-radius: 12px; padding: 30px; overflow-y: auto;
+            position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .tutorial-content h1 { margin-top: 0; color: var(--primary-color); border-bottom: 2px solid var(--accent-color); padding-bottom: 10px;}
+        .tutorial-content h2 { color: var(--accent-color); margin-top: 20px;}
+        .tutorial-close {
+            position: absolute; top: 15px; right: 20px; font-size: 1.5rem;
+            cursor: pointer; color: #666; font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
-    <!-- UI Elemente -->
-    <div id="filter-panel">
-        <div class="filter-group">
-            <label class="label">Personensuche</label>
-            <input type="text" id="search-input" placeholder="Name, Vorname oder ID..." oninput="filterData()">
-        </div>
-        <div id="stats" style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">Initialisiere Karte...</div>
-        <button class="btn" onclick="toggleList()">&#9776; Personenliste anzeigen</button>
-        <button class="btn" style="background: var(--secondary-color); margin-top: 5px;" onclick="toggleTutorial()">&#10068; Anleitung / Tutorial</button>
-    </div>
-
-    <!-- Tutorial Overlay Container -->
-    <div id="tutorial-overlay" onclick="if(event.target === this) toggleTutorial()">
-        <div class="tutorial-modal">
-            <div class="tutorial-header">
-                <h2>&#10068; Wie funktioniert diese App?</h2>
-                <button onclick="toggleTutorial()" style="color:white; background:none; border:none; cursor:pointer; font-size:1.5rem;" title="Schließen">&times;</button>
-            </div>
-            <div class="tutorial-content">
-                <p>Willkommen in der Varel DP-Database! Diese Web-Anwendung dient der interaktiven Visualisierung und Analyse historischer Personendaten auf einer Karte.</p>
-                
-                <h3>1. Die Kartenansicht & Ebenen (Layer)</h3>
-                <ul>
-                    <li><strong>Layer aktivieren (Wichtig!):</strong> Oben rechts auf der Karte befindet sich ein Ebenen-Menü. Setzen Sie dort zwingend ein Häkchen bei <em>"Geburtsorte anzeigen"</em> und/oder <em>"Todesorte anzeigen"</em>.</li>
-                    <li><strong>Navigation:</strong> Sie können die Karte mit der Maus verschieben und mit den Tasten <code>+</code> und <code>-</code> unten rechts (oder dem Mausrad) zoomen.</li>
-                    <li><strong>Cluster:</strong> Farbige Kreise mit Zahlen fassen mehrere Personen an einem Ort zusammen. Klicken Sie darauf, um automatisch in diese Region hineinzuzoomen.</li>
-                </ul>
-
-                <h3>2. Das Filter-Panel (Oben Links)</h3>
-                <ul>
-                    <li><strong>Personensuche:</strong> Suchen Sie in Echtzeit nach Namen, Vornamen, IDs oder Geburtsorten. Die Karte passt sich sofort an.</li>
-                    <li><strong>Dynamische Statistik:</strong> Zeigt an, wie viele Personen aktuell gefunden wurden und wie viele Orte nicht auf der Karte darstellbar sind (da historische Koordinaten fehlen).</li>
-                </ul>
-
-                <h3>3. Die tabellarische Personenliste</h3>
-                <ul>
-                    <li>Klicken Sie auf <em>"Personenliste anzeigen"</em>, um alle aktuellen Suchtreffer als übersichtliche Tabelle zu sehen.</li>
-                    <li><strong>Sortierung:</strong> Klicken Sie auf die Spaltenüberschriften (z. B. Name, Geburtsdatum), um die Liste alphabetisch oder chronologisch zu sortieren.</li>
-                    <li><strong>Status:</strong> Sehen Sie in der rechten Spalte auf einen Blick, ob eine Person geokodiert (auf der Karte sichtbar) ist oder ob sie fehlt.</li>
-                </ul>
-
-                <h3>4. Die Detailansicht</h3>
-                <ul>
-                    <li>Klicken Sie auf einen Marker auf der Karte <strong>oder</strong> auf eine Zeile in der Personenliste, um detaillierte Informationen zu öffnen.</li>
-                    <li><strong>Linke Sidebar:</strong> Zeigt die Stammdaten der Person (Name, Geburtsdaten, Nationalität, Beruf).</li>
-                    <li><strong>Rechte Sidebar:</strong> Zeigt die chronologische Aufenthalts- und Migrationsgeschichte der Person als Karten (Cards).</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-
-    <div id="list-overlay">
-        <div class="list-header">
-            <h2 id="list-title">Alle Personen</h2>
-            <button onclick="toggleList()" style="color:white; background:none; border:none; cursor:pointer; font-size:1.5rem;">&times;</button>
-        </div>
-        <div class="list-content">
-            <table>
-                <thead>
-                    <tr>
-                        <th onclick="sortList('Nummer')" title="Nach Nummer sortieren">Nummer &#8693;</th>
-                        <th onclick="sortList('Name')" title="Nach Name sortieren">Name &#8693;</th>
-                        <th onclick="sortList('Vorname')" title="Nach Vorname sortieren">Vorname &#8693;</th>
-                        <th onclick="sortList('Geburtsdatum')" title="Nach Geburtsdatum sortieren">Geburtsdatum &#8693;</th>
-                        <th onclick="sortList('Geburtsort')" title="Nach Geburtsort sortieren">Geburtsort &#8693;</th>
-                        <th onclick="sortList('Staatsangehörigkeit')" title="Nach Nationalität sortieren">Nationalität &#8693;</th>
-                        <th onclick="sortList('Status')" title="Nach Status sortieren">Status (Karte) &#8693;</th>
-                    </tr>
-                </thead>
-                <tbody id="list-tbody"></tbody>
-            </table>
-        </div>
-    </div>
-
+    <!-- Das Container-Element für die Leaflet-Karte -->
     <div id="map"></div>
 
-    <div id="sidebar-left" class="sidebar">
-        <div class="sidebar-header">
-            <h2>Stammdaten</h2>
-            <button onclick="closeSidebars()" style="color:white; background:none; border:none; cursor:pointer; font-size:1.5rem;">&times;</button>
-        </div>
-        <div class="sidebar-content" id="content-left"></div>
+    <!-- UI Panel (Suchfeld und Infos) -->
+    <div id="ui-panel">
+        <h2>Varel DP-Database</h2>
+        <input type="text" id="search-input" placeholder="Name, Ort oder ID suchen...">
+        <div id="status-text">Lade Daten...</div>
+        <button id="tutorial-btn">Anleitung & Hilfe</button>
     </div>
 
+    <!-- Linke Sidebar (Stammdaten) -->
+    <div id="sidebar-left" class="sidebar">
+        <div class="sidebar-header">
+            <h3>Stammdaten</h3>
+            <button class="close-btn" onclick="closeSidebars()">&times;</button>
+        </div>
+        <div class="sidebar-content" id="content-left">
+            <!-- Wird per JS befüllt -->
+        </div>
+    </div>
+
+    <!-- Rechte Sidebar (Aufenthaltsorte) -->
     <div id="sidebar-right" class="sidebar">
         <div class="sidebar-header">
-            <h2>Aufenthalte</h2>
-            <button onclick="closeSidebars()" style="color:white; background:none; border:none; cursor:pointer; font-size:1.5rem;">&times;</button>
+            <h3>Aufenthalte</h3>
+            <button class="close-btn" onclick="closeSidebars()">&times;</button>
         </div>
-        <div class="sidebar-content" id="content-right"></div>
+        <div class="sidebar-content" id="content-right">
+            <!-- Wird per JS befüllt -->
+        </div>
+    </div>
+
+    <!-- Tutorial Modal -->
+    <div id="tutorial-modal">
+        <div class="tutorial-content">
+            <span class="tutorial-close" onclick="document.getElementById('tutorial-modal').classList.remove('active')">&times;</span>
+            <h1>Willkommen in der Varel DP-Database</h1>
+            <p>Diese interaktive Karte visualisiert die historischen Daten von Displaced Persons (DPs).</p>
+            
+            <h2>1. Die Karte & Marker</h2>
+            <p>Auf der Karte sehen Sie farbige Kreise (Marker). Hellblaue Marker stehen für Geburtsorte, dunkelblaue für Todesorte (falls aktiviert). Gruppen von Markern werden als Cluster mit einer Zahl dargestellt. Klicken Sie darauf, um hineinzuzoomen.</p>
+            
+            <h2>2. Personendetails ansehen</h2>
+            <p><b>Klicken Sie auf einen einzelnen, farbigen Punkt auf der Karte.</b> Dadurch öffnen sich links und rechts zwei Leisten:</p>
+            <ul>
+                <li><b>Links:</b> Stammdaten (Name, ID, Geburtsdatum, Religion etc.)</li>
+                <li><b>Rechts:</b> Aufenthaltsgeschichte (Chronologie der Zuzüge und Abzüge)</li>
+            </ul>
+
+            <h2>3. Suchen und Filtern</h2>
+            <p>Nutzen Sie das Suchfeld oben links, um nach Namen, IDs oder Orten zu suchen. Die Karte aktualisiert sich in Echtzeit und zeigt nur noch die passenden Treffer an.</p>
+            
+            <button id="tutorial-btn" style="width: 100%; margin-top: 20px;" onclick="document.getElementById('tutorial-modal').classList.remove('active')">Verstanden, los geht's!</button>
+        </div>
     </div>
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet MarkerCluster JS -->
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+
     <script>
+        // Globale Variablen für Daten und Layer
+        let globalData = [];
+        let birthCluster, deathCluster;
+
         // Karte initialisieren. Zoom-Kontrolle unten rechts, damit sie nicht das Suchfeld verdeckt.
         const map = L.map('map', { zoomControl: false }).setView([51.5, 10.5], 5);
         L.control.zoom({ position: 'bottomright' }).addTo(map);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; CARTO' }).addTo(map);
+        
+        // Helle, unaufdringliche Basiskarte (CartoDB Light)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { 
+            attribution: '&copy; CARTO' 
+        }).addTo(map);
 
-        // Layer-Gruppen anlegen
-        const geburtsLayer = L.markerClusterGroup({ chunkedLoading: true, maxClusterRadius: 40 });
-        const todesLayer = L.markerClusterGroup({ chunkedLoading: true, maxClusterRadius: 40 });
+        // Klick auf die leere Karte schließt die Sidebars
+        map.on('click', closeSidebars);
 
-        // Ebenen-Steuerung zur Karte hinzufügen
-        const overlayMaps = {
-            "Geburtsorte anzeigen": geburtsLayer,
-            "Todesorte anzeigen": todesLayer
-        };
-        L.control.layers(null, overlayMaps, { collapsed: false }).addTo(map);
+        // Tutorial Button Logic
+        document.getElementById('tutorial-btn').addEventListener('click', () => {
+            document.getElementById('tutorial-modal').classList.add('active');
+        });
 
-        let allData = [];
-        let currentListData = []; // Speichert die aktuell gefilterte Liste für die Sortierung
-        let currentSortCol = '';
-        let currentSortAsc = true;
-
-        // Funktion um überlappende Koordinaten leicht zu verschieben
-        function applyJitter(coords) {
-            if (!coords || coords.length < 2) return null;
-            const lat = parseFloat(coords[0]);
-            const lng = parseFloat(coords[1]);
-            // Verhindern, dass kaputte Daten (NaN) die Karte abstürzen lassen
-            if (isNaN(lat) || isNaN(lng)) return null;
-            
-            const f = 0.015;
-            return [lat + (Math.random() - 0.5) * f, lng + (Math.random() - 0.5) * f];
-        }
-
-        // Daten laden (Asynchron)
-        fetch('data.json')
-            .then(res => {
-                if (!res.ok) throw new Error("Netzwerkfehler oder Datei nicht gefunden.");
-                return res.json();
-            })
-            .then(data => {
-                allData = data;
-                currentListData = [...data]; // Initial befüllen
-                renderMarkers(data);
-                renderList(currentListData);
-                
-                // Statistische Analyse der fehlenden Geodaten
-                const missingCoords = data.filter(p => !p.Geburtsort_Koordinaten).length;
-                document.getElementById('stats').innerHTML = `<b>${data.length} Personen geladen.</b><br>
-                    <span style="color: #c0392b;">${missingCoords} Orte nicht lokalisierbar.</span><br>
-                    Bitte rechts oben die Layer aktivieren!`;
-            })
-            .catch(error => {
-                console.error("Datenladefehler:", error);
-                document.getElementById('stats').innerHTML = `<span style="color: #c0392b; font-weight: bold;">Fehler: data.json nicht gefunden.</span><br>Die App muss über GitHub Pages mit hochgeladener JSON-Datei laufen.`;
-            });
-
-        // Marker zeichnen
-        function renderMarkers(data) {
-            geburtsLayer.clearLayers();
-            todesLayer.clearLayers();
-
-            data.forEach(p => {
-                const geburtsCoords = applyJitter(p.Geburtsort_Koordinaten);
-                if (geburtsCoords) {
-                    // Wir nutzen L.circleMarker (Vektor) statt L.marker (HTML) für zuverlässige Klicks
-                    const mGeburt = L.circleMarker(geburtsCoords, { 
-                        radius: 8,
-                        fillColor: '#4db4b8', // Entspricht var(--secondary-color)
-                        color: '#ffffff',
-                        weight: 2,
-                        opacity: 1,
-                        fillOpacity: 1
-                    });
-                    
-                    mGeburt.bindTooltip(`<b>${p.Name || 'Unbekannt'}, ${p.Vorname || ''}</b><br>Geburtsort: ${p.Geburtsort || 'Unbekannt'}`);
-                    mGeburt.on('click', function(e) {
-                        L.DomEvent.stopPropagation(e);
-                        console.log("Person angeklickt:", p.Name); // Hilfe zur Fehlersuche in der Konsole
-                        showPerson(p);
-                    });
-                    geburtsLayer.addLayer(mGeburt);
-                }
-
-                const todesCoords = applyJitter(p.Todesort_Koordinaten);
-                if (todesCoords) {
-                    const mTod = L.circleMarker(todesCoords, { 
-                        radius: 8,
-                        fillColor: '#2b6a6c', // Entspricht var(--primary-color)
-                        color: '#ffffff',
-                        weight: 2,
-                        opacity: 1,
-                        fillOpacity: 1
-                    });
-                    
-                    mTod.bindTooltip(`<b>${p.Name || 'Unbekannt'}, ${p.Vorname || ''}</b><br>Todesort (Varel)`);
-                    mTod.on('click', function(e) {
-                        L.DomEvent.stopPropagation(e);
-                        console.log("Person angeklickt:", p.Name);
-                        showPerson(p);
-                    });
-                    todesLayer.addLayer(mTod);
-                }
-            });
-        }
-
-        // Suchfunktion
-        function filterData() {
-            const val = document.getElementById('search-input').value.toLowerCase();
-            currentListData = allData.filter(p => 
-                (p.Name && p.Name.toLowerCase().includes(val)) || 
-                (p.Vorname && p.Vorname.toLowerCase().includes(val)) || 
-                (p.Nummer && p.Nummer.includes(val)) ||
-                (p.Geburtsort && p.Geburtsort.toLowerCase().includes(val))
-            );
-            
-            if (currentSortCol) performSort(); // Aktive Sortierung beibehalten
-            
-            renderMarkers(currentListData);
-            renderList(currentListData);
-            document.getElementById('stats').innerHTML = `<b>${currentListData.length} Treffer.</b><br>Bitte rechts oben die Layer aktivieren!`;
-        }
-
-        // Tabellensortierung
-        function sortList(col) {
-            if (currentSortCol === col) {
-                currentSortAsc = !currentSortAsc; // Sortierrichtung umkehren
-            } else {
-                currentSortCol = col;
-                currentSortAsc = true; // Aufsteigend als Standard
-            }
-            performSort();
-            renderList(currentListData);
-        }
-
-        function performSort() {
-            currentListData.sort((a, b) => {
-                let valA, valB;
-                
-                // Spezifische Behandlung für Status (Fehlende Geodaten vs. Geokodiert)
-                if (currentSortCol === 'Status') {
-                    valA = a.Geburtsort_Koordinaten ? 1 : 0;
-                    valB = b.Geburtsort_Koordinaten ? 1 : 0;
-                } 
-                // Spezifische Behandlung für Nummern (verhindert, dass "10" vor "2" sortiert wird)
-                else if (currentSortCol === 'Nummer') {
-                    valA = parseInt(a.Nummer) || 0;
-                    valB = parseInt(b.Nummer) || 0;
-                } 
-                // Standard-Text-Sortierung
-                else {
-                    valA = (a[currentSortCol] || '').toLowerCase();
-                    valB = (b[currentSortCol] || '').toLowerCase();
-                }
-
-                if (valA < valB) return currentSortAsc ? -1 : 1;
-                if (valA > valB) return currentSortAsc ? 1 : -1;
-                return 0;
-            });
-        }
-
-        // Neue Listen-Funktionen
-        function toggleList() {
-            const list = document.getElementById('list-overlay');
-            list.style.display = (list.style.display === 'flex') ? 'none' : 'flex';
-        }
-
-        // Neue Tutorial-Funktion
-        function toggleTutorial() {
-            const tut = document.getElementById('tutorial-overlay');
-            tut.style.display = (tut.style.display === 'flex') ? 'none' : 'flex';
-        }
-
-        function renderList(data) {
-            const tbody = document.getElementById('list-tbody');
-            document.getElementById('list-title').innerText = `Personenliste (${data.length} Einträge)`;
-            
-            tbody.innerHTML = data.map(p => {
-                // Zeigt an, ob die API Koordinaten für diesen Ort gefunden hat
-                const status = p.Geburtsort_Koordinaten ? '<span style="color: #27ae60; font-weight: bold;">Geokodiert</span>' : '<span style="color: #c0392b; font-weight: bold;">Fehlt auf Karte</span>';
-                return `
-                    <tr onclick='showPersonById("${p.Nummer}")'>
-                        <td>${p.Nummer || '-'}</td>
-                        <td><b>${p.Name || '-'}</b></td>
-                        <td>${p.Vorname || '-'}</td>
-                        <td>${p.Geburtsdatum || '-'}</td>
-                        <td>${p.Geburtsort || '-'}</td>
-                        <td>${p.Staatsangehörigkeit || '-'}</td>
-                        <td>${status}</td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function showPersonById(nummer) {
-            // Findet die Person sicher anhand der ID und öffnet die Sidebar
-            const p = allData.find(x => String(x.Nummer) === String(nummer));
-            if (p) {
-                showPerson(p);
-                // Liste auf kleinen Bildschirmen automatisch schließen für bessere UX
-                if (window.innerWidth < 1000) toggleList(); 
-            }
-        }
-
-        // Sidebar füllen und öffnen
+        // Sidebar füllen und öffnen (Jetzt 100% absturzsicher)
         function showPerson(p) {
-            document.getElementById('content-left').innerHTML = `
-                <div class="card">
-                    <div class="label">Name</div><div class="value"><b>${p.Name}, ${p.Vorname}</b></div>
-                    <div class="label">ID / Nummer</div><div class="value">${p.Nummer || '-'}</div>
-                    <div class="label">Geburtsdaten</div><div class="value">${p.Geburtsdatum || '?'} in ${p.Geburtsort || '?'}</div>
-                    <div class="label">Staatsangehörigkeit</div><div class="value">${p.Staatsangehörigkeit || '-'}</div>
-                    <div class="label">Beruf</div><div class="value">${p.Beruf || '-'}</div>
-                    <div class="label">Glaubensbekenntnis</div><div class="value">${p.Glaubensbekenntnis || '-'}</div>
-                </div>
-            `;
-            let aufHtm = '';
-            if (p.Aufenthalte && p.Aufenthalte.length > 0) {
-                aufHtm = p.Aufenthalte.map(a => `
+            try {
+                console.log("Person angeklickt:", p.Name);
+                
+                // Linke Seite: Stammdaten
+                document.getElementById('content-left').innerHTML = `
                     <div class="card">
-                        <div class="label">${a.Zuzug || '?'} bis ${a.Abzug || '?'}</div>
-                        <div class="value">${a.Ort}</div>
+                        <div class="label">Name</div><div class="value"><b>${p.Name || 'Unbekannt'}, ${p.Vorname || ''}</b></div>
+                        <div class="label">ID / Nummer</div><div class="value">${p.Nummer || '-'}</div>
+                        <div class="label">Geburtsdaten</div><div class="value">${p.Geburtsdatum || '?'} in ${p.Geburtsort || '?'}</div>
+                        <div class="label">Staatsangehörigkeit</div><div class="value">${p.Staatsangehörigkeit || '-'}</div>
+                        <div class="label">Beruf</div><div class="value">${p.Beruf || '-'}</div>
+                        <div class="label">Glaubensbekenntnis</div><div class="value">${p.Glaubensbekenntnis || '-'}</div>
                     </div>
-                `).join('');
-            } else {
-                aufHtm = '<p style="color:#666; font-size:0.9rem;">Keine weiteren Meldedaten vorhanden.</p>';
+                `;
+                
+                // Rechte Seite: Aufenthalte (Crash-Sicher gemacht!)
+                let aufHtm = '';
+                
+                if (Array.isArray(p.Aufenthalte) && p.Aufenthalte.length > 0) {
+                    // Wenn es eine saubere Liste ist
+                    aufHtm = p.Aufenthalte.map(a => `
+                        <div class="card">
+                            <div class="label">${a.Zuzug || '?'} bis ${a.Abzug || '?'}</div>
+                            <div class="value">${a.Ort || '-'}</div>
+                        </div>
+                    `).join('');
+                } else if (typeof p.Aufenthalte === 'string' && p.Aufenthalte.trim() !== '') {
+                    // Falls die Aufenthalte als reiner Text in der JSON stehen
+                    aufHtm = `
+                        <div class="card">
+                            <div class="label">Aufenthalt (Textnotiz)</div>
+                            <div class="value">${p.Aufenthalte}</div>
+                        </div>
+                    `;
+                } else {
+                    // Wenn gar nichts vorhanden ist
+                    aufHtm = '<div class="card"><div class="value" style="color:#666;">Keine weiteren Meldedaten vorhanden.</div></div>';
+                }
+                
+                document.getElementById('content-right').innerHTML = aufHtm;
+                
+                // Klassen hinzufügen um die CSS-Animation auszulösen
+                document.getElementById('sidebar-left').classList.add('active');
+                document.getElementById('sidebar-right').classList.add('active');
+                console.log("Sidebars wurden erfolgreich geöffnet!");
+                
+            } catch (error) {
+                console.error("KRITISCHER FEHLER beim Öffnen der Person:", error);
             }
-            
-            document.getElementById('content-right').innerHTML = aufHtm;
-            
-            document.getElementById('sidebar-left').classList.add('active');
-            document.getElementById('sidebar-right').classList.add('active');
         }
 
         // Sidebar schließen
         function closeSidebars() {
-            document.querySelectorAll('.sidebar').forEach(s => s.classList.remove('active'));
+            document.getElementById('sidebar-left').classList.remove('active');
+            document.getElementById('sidebar-right').classList.remove('active');
         }
+
+        // Jitter-Funktion: Verschiebt Marker minimal, damit sie sich nicht verdecken
+        function applyJitter(coord, maxOffset = 0.005) {
+            // Stelle sicher, dass die Koordinate eine Zahl ist, bevor wir rechnen
+            const numCoord = parseFloat(coord);
+            if(isNaN(numCoord)) return 0;
+            return numCoord + (Math.random() - 0.5) * maxOffset;
+        }
+
+        // Daten auf der Karte zeichnen
+        function renderData(data) {
+            // Alte Layer löschen, falls vorhanden
+            if (birthCluster) map.removeLayer(birthCluster);
+            if (deathCluster) map.removeLayer(deathCluster);
+
+            // Neue Cluster-Gruppen anlegen
+            birthCluster = L.markerClusterGroup({ disableClusteringAtZoom: 14 });
+            deathCluster = L.markerClusterGroup({ disableClusteringAtZoom: 14 });
+
+            let geocodedCount = 0;
+
+            data.forEach(person => {
+                // Geburtsort Marker
+                if (person.Geburtsort_Lat && person.Geburtsort_Lng) {
+                    geocodedCount++;
+                    const lat = applyJitter(person.Geburtsort_Lat);
+                    const lng = applyJitter(person.Geburtsort_Lng);
+                    
+                    // Wir nutzen L.circleMarker (Vektor) - 100% klickbar!
+                    const marker = L.circleMarker([lat, lng], {
+                        radius: 8,
+                        fillColor: '#3498db', // Hellblau
+                        color: '#ffffff',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.8,
+                        className: 'leaflet-interactive' // Stellt sicher, dass Klicks ankommen
+                    });
+
+                    marker.bindTooltip(`<b>${person.Name || 'Unbekannt'}, ${person.Vorname || ''}</b><br>Geboren in ${person.Geburtsort || '?'}`, {
+                        className: 'custom-tooltip', direction: 'top'
+                    });
+
+                    // Klick-Event (sicher)
+                    marker.on('click', function(e) {
+                        L.DomEvent.stopPropagation(e); // Verhindert, dass der Klick auf die Karte durchgeht
+                        showPerson(person);
+                    });
+
+                    birthCluster.addLayer(marker);
+                }
+
+                // Todesort Marker (falls in Daten vorhanden)
+                if (person.Todesort_Lat && person.Todesort_Lng) {
+                    const lat = applyJitter(person.Todesort_Lat);
+                    const lng = applyJitter(person.Todesort_Lng);
+                    
+                    const marker = L.circleMarker([lat, lng], {
+                        radius: 8,
+                        fillColor: '#2c3e50', // Dunkelblau
+                        color: '#ffffff',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.8,
+                        className: 'leaflet-interactive'
+                    });
+
+                    marker.bindTooltip(`<b>${person.Name || 'Unbekannt'}, ${person.Vorname || ''}</b><br>Gestorben in ${person.Todesort || '?'}`, {
+                        className: 'custom-tooltip', direction: 'top'
+                    });
+
+                    marker.on('click', function(e) {
+                        L.DomEvent.stopPropagation(e);
+                        showPerson(person);
+                    });
+
+                    deathCluster.addLayer(marker);
+                }
+            });
+
+            // Layer zur Karte hinzufügen
+            map.addLayer(birthCluster);
+            // deathCluster standardmäßig deaktiviert, kann aber über Layer-Control hinzugefügt werden
+
+            // Layer-Kontrolle hinzufügen (nur wenn sie nicht schon existiert)
+            if(!window.layerControl) {
+                const overlayMaps = {
+                    "Geburtsorte anzeigen": birthCluster,
+                    "Todesorte anzeigen": deathCluster
+                };
+                window.layerControl = L.control.layers(null, overlayMaps, { collapsed: false }).addTo(map);
+            }
+
+            // Status aktualisieren
+            document.getElementById('status-text').innerText = 
+                `${data.length} Personen gefunden (${geocodedCount} auf Karte gezeichnet).`;
+        }
+
+        // Daten laden (Mock-Data oder echte data.json)
+        fetch('data.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("data.json nicht gefunden. Verwende Beispieldaten.");
+                }
+                return response.json();
+            })
+            .then(data => {
+                globalData = data;
+                renderData(globalData);
+                // Zeige Tutorial beim ersten Laden
+                document.getElementById('tutorial-modal').classList.add('active');
+            })
+            .catch(error => {
+                console.warn(error);
+                document.getElementById('status-text').innerText = "Konnte data.json nicht laden. Bitte stelle sicher, dass die Datei existiert.";
+                
+                // Fallback-Beispieldaten zum Testen des Layouts
+                globalData = [
+                    {
+                        "Nummer": "1234",
+                        "Name": "Mustermann",
+                        "Vorname": "Max",
+                        "Geburtsdatum": "01.01.1920",
+                        "Geburtsort": "Berlin",
+                        "Geburtsort_Lat": 52.52,
+                        "Geburtsort_Lng": 13.40,
+                        "Staatsangehörigkeit": "Polnisch",
+                        "Beruf": "Tischler",
+                        "Glaubensbekenntnis": "Katholisch",
+                        "Aufenthalte": [
+                            {"Zuzug": "1945", "Abzug": "1946", "Ort": "Varel DP Camp"},
+                            {"Zuzug": "1946", "Abzug": "1948", "Ort": "Bremen"}
+                        ]
+                    }
+                ];
+                renderData(globalData);
+            });
+
+        // Suchfunktion
+        document.getElementById('search-input').addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase();
+            const filtered = globalData.filter(p => {
+                return (p.Name && p.Name.toLowerCase().includes(term)) ||
+                       (p.Vorname && p.Vorname.toLowerCase().includes(term)) ||
+                       (p.Geburtsort && p.Geburtsort.toLowerCase().includes(term)) ||
+                       (p.Nummer && p.Nummer.toString().includes(term));
+            });
+            renderData(filtered);
+            closeSidebars(); // Sidebars bei neuer Suche schließen
+        });
+
     </script>
 </body>
 </html>
