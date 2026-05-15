@@ -63,10 +63,20 @@
         .value { font-size: 1rem; margin-bottom: 8px; }
 
         /* Marker Stile für unterschiedliche Layer */
-        .custom-leaflet-icon { background: transparent; border: none; }
-        .marker-geburt { background-color: var(--secondary-color); width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); transition: transform 0.2s; cursor: pointer; pointer-events: auto; }
-        .marker-tod { background-color: var(--primary-color); width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); transition: transform 0.2s; cursor: pointer; pointer-events: auto; }
-        .marker-geburt:hover, .marker-tod:hover { transform: scale(1.3); z-index: 1000 !important; }
+        .marker-geburt, .marker-tod {
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+            transition: transform 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .marker-geburt { background-color: var(--secondary-color); }
+        .marker-tod { background-color: var(--primary-color); }
+        
+        .marker-geburt:hover, .marker-tod:hover {
+            transform: scale(1.4);
+            /* ACHTUNG: Kein z-index !important hier, da das Leaflets Event-Handling stört */
+        }
         
         /* Tutorial Overlay Modal */
         #tutorial-overlay {
@@ -215,7 +225,10 @@
         // Funktion um überlappende Koordinaten leicht zu verschieben
         function applyJitter(coords) {
             const f = 0.015;
-            return [coords[0] + (Math.random() - 0.5) * f, coords[1] + (Math.random() - 0.5) * f];
+            // ParseFloat verhindert String-Fehler, falls die JSON-Zahlen als Text formatiert sind
+            const lat = parseFloat(coords[0]);
+            const lng = parseFloat(coords[1]);
+            return [lat + (Math.random() - 0.5) * f, lng + (Math.random() - 0.5) * f];
         }
 
         // Daten laden (Asynchron)
@@ -248,18 +261,32 @@
 
             data.forEach(p => {
                 if (p.Geburtsort_Koordinaten && p.Geburtsort_Koordinaten.length === 2) {
-                    const iconGeburt = L.divIcon({ className: 'custom-leaflet-icon leaflet-interactive', html: `<div class="marker-geburt"></div>`, iconSize: [16, 16], iconAnchor: [8, 8] });
+                    const iconGeburt = L.divIcon({ 
+                        className: 'marker-geburt leaflet-interactive', 
+                        iconSize: [16, 16], 
+                        iconAnchor: [8, 8] 
+                    });
                     const mGeburt = L.marker(applyJitter(p.Geburtsort_Koordinaten), { icon: iconGeburt });
                     mGeburt.bindTooltip(`<b>${p.Name || 'Unbekannt'}, ${p.Vorname || ''}</b><br>Geburtsort: ${p.Geburtsort || 'Unbekannt'}`);
-                    mGeburt.on('click', () => showPerson(p));
+                    mGeburt.on('click', (e) => {
+                        L.DomEvent.stopPropagation(e); // Verhindert, dass der Klick ins Leere fällt
+                        showPerson(p);
+                    });
                     geburtsLayer.addLayer(mGeburt);
                 }
 
                 if (p.Todesort_Koordinaten && p.Todesort_Koordinaten.length === 2) {
-                    const iconTod = L.divIcon({ className: 'custom-leaflet-icon leaflet-interactive', html: `<div class="marker-tod"></div>`, iconSize: [16, 16], iconAnchor: [8, 8] });
+                    const iconTod = L.divIcon({ 
+                        className: 'marker-tod leaflet-interactive', 
+                        iconSize: [16, 16], 
+                        iconAnchor: [8, 8] 
+                    });
                     const mTod = L.marker(applyJitter(p.Todesort_Koordinaten), { icon: iconTod });
                     mTod.bindTooltip(`<b>${p.Name || 'Unbekannt'}, ${p.Vorname || ''}</b><br>Todesort (Varel)`);
-                    mTod.on('click', () => showPerson(p));
+                    mTod.on('click', (e) => {
+                        L.DomEvent.stopPropagation(e);
+                        showPerson(p);
+                    });
                     todesLayer.addLayer(mTod);
                 }
             });
