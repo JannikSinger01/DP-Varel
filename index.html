@@ -62,22 +62,6 @@
         .label { font-size: 0.75rem; color: #7f8c8d; text-transform: uppercase; font-weight: bold; }
         .value { font-size: 1rem; margin-bottom: 8px; }
 
-        /* Marker Stile für unterschiedliche Layer */
-        .marker-geburt, .marker-tod {
-            border-radius: 50%;
-            border: 2px solid white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
-            transition: transform 0.2s ease-in-out;
-            cursor: pointer;
-        }
-        .marker-geburt { background-color: var(--secondary-color); }
-        .marker-tod { background-color: var(--primary-color); }
-        
-        .marker-geburt:hover, .marker-tod:hover {
-            transform: scale(1.4);
-            /* ACHTUNG: Kein z-index !important hier, da das Leaflets Event-Handling stört */
-        }
-        
         /* Tutorial Overlay Modal */
         #tutorial-overlay {
             display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -224,10 +208,13 @@
 
         // Funktion um überlappende Koordinaten leicht zu verschieben
         function applyJitter(coords) {
-            const f = 0.015;
-            // ParseFloat verhindert String-Fehler, falls die JSON-Zahlen als Text formatiert sind
+            if (!coords || coords.length < 2) return null;
             const lat = parseFloat(coords[0]);
             const lng = parseFloat(coords[1]);
+            // Verhindern, dass kaputte Daten (NaN) die Karte abstürzen lassen
+            if (isNaN(lat) || isNaN(lng)) return null;
+            
+            const f = 0.015;
             return [lat + (Math.random() - 0.5) * f, lng + (Math.random() - 0.5) * f];
         }
 
@@ -260,31 +247,42 @@
             todesLayer.clearLayers();
 
             data.forEach(p => {
-                if (p.Geburtsort_Koordinaten && p.Geburtsort_Koordinaten.length === 2) {
-                    const iconGeburt = L.divIcon({ 
-                        className: 'marker-geburt leaflet-interactive', 
-                        iconSize: [16, 16], 
-                        iconAnchor: [8, 8] 
+                const geburtsCoords = applyJitter(p.Geburtsort_Koordinaten);
+                if (geburtsCoords) {
+                    // Wir nutzen L.circleMarker (Vektor) statt L.marker (HTML) für zuverlässige Klicks
+                    const mGeburt = L.circleMarker(geburtsCoords, { 
+                        radius: 8,
+                        fillColor: '#4db4b8', // Entspricht var(--secondary-color)
+                        color: '#ffffff',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 1
                     });
-                    const mGeburt = L.marker(applyJitter(p.Geburtsort_Koordinaten), { icon: iconGeburt });
+                    
                     mGeburt.bindTooltip(`<b>${p.Name || 'Unbekannt'}, ${p.Vorname || ''}</b><br>Geburtsort: ${p.Geburtsort || 'Unbekannt'}`);
-                    mGeburt.on('click', (e) => {
-                        L.DomEvent.stopPropagation(e); // Verhindert, dass der Klick ins Leere fällt
+                    mGeburt.on('click', function(e) {
+                        L.DomEvent.stopPropagation(e);
+                        console.log("Person angeklickt:", p.Name); // Hilfe zur Fehlersuche in der Konsole
                         showPerson(p);
                     });
                     geburtsLayer.addLayer(mGeburt);
                 }
 
-                if (p.Todesort_Koordinaten && p.Todesort_Koordinaten.length === 2) {
-                    const iconTod = L.divIcon({ 
-                        className: 'marker-tod leaflet-interactive', 
-                        iconSize: [16, 16], 
-                        iconAnchor: [8, 8] 
+                const todesCoords = applyJitter(p.Todesort_Koordinaten);
+                if (todesCoords) {
+                    const mTod = L.circleMarker(todesCoords, { 
+                        radius: 8,
+                        fillColor: '#2b6a6c', // Entspricht var(--primary-color)
+                        color: '#ffffff',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 1
                     });
-                    const mTod = L.marker(applyJitter(p.Todesort_Koordinaten), { icon: iconTod });
+                    
                     mTod.bindTooltip(`<b>${p.Name || 'Unbekannt'}, ${p.Vorname || ''}</b><br>Todesort (Varel)`);
-                    mTod.on('click', (e) => {
+                    mTod.on('click', function(e) {
                         L.DomEvent.stopPropagation(e);
+                        console.log("Person angeklickt:", p.Name);
                         showPerson(p);
                     });
                     todesLayer.addLayer(mTod);
