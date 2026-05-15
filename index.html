@@ -54,7 +54,9 @@
         }
         #sidebar-left { left: 0; transform: translateX(-100%); }
         #sidebar-right { right: 0; transform: translateX(100%); }
-        .sidebar.active { transform: translateX(0); }
+        
+        /* FIX: Höhere CSS-Spezifität, damit das Ausfahren erzwungen wird */
+        #sidebar-left.active, #sidebar-right.active { transform: translateX(0); }
         
         .sidebar-header { padding: 20px; background: var(--primary-color); color: white; display: flex; justify-content: space-between; align-items: center; }
         .sidebar-content { padding: 20px; overflow-y: auto; flex-grow: 1; }
