@@ -265,10 +265,19 @@
             document.getElementById('sidebar-right').classList.remove('active');
         }
 
+        // --- NEU: Super-robuste Koordinaten-Verarbeitung ---
+        function parseCoord(val) {
+            if (val === undefined || val === null || val === '') return null;
+            // Ersetzt deutsche Kommas durch Punkte, z.B. "51,5" -> "51.5"
+            let strVal = val.toString().trim().replace(',', '.');
+            let num = parseFloat(strVal);
+            if (isNaN(num) || num === 0) return null;
+            return num;
+        }
+
         function applyJitter(coord, maxOffset = 0.005) {
-            const numCoord = parseFloat(coord);
-            if(isNaN(numCoord)) return 0;
-            return numCoord + (Math.random() - 0.5) * maxOffset;
+            if (coord === null) return 0;
+            return coord + (Math.random() - 0.5) * maxOffset;
         }
 
         function renderTable(data) {
@@ -276,7 +285,13 @@
             tbody.innerHTML = '';
             
             data.forEach(p => {
-                const hasCoords = (p.Geburtsort_Lat && p.Geburtsort_Lng) || (p.Todesort_Lat && p.Todesort_Lng);
+                // Tolerantes Auslesen der Koordinaten
+                const bLat = parseCoord(p.Geburtsort_Lat || p.Geburtsort_lat || p.lat);
+                const bLng = parseCoord(p.Geburtsort_Lng || p.Geburtsort_lng || p.lng || p.lon);
+                const tLat = parseCoord(p.Todesort_Lat || p.Todesort_lat);
+                const tLng = parseCoord(p.Todesort_Lng || p.Todesort_lng);
+                
+                const hasCoords = (bLat !== null && bLng !== null) || (tLat !== null && tLng !== null);
                 const statusBadge = hasCoords ? '<span class="badge green">Geokodiert</span>' : '<span class="badge red">Fehlt</span>';
                 
                 const tr = document.createElement('tr');
@@ -308,8 +323,10 @@
             currentFilteredData.sort((a, b) => {
                 let valA = a[col] || ''; let valB = b[col] || '';
                 if(col === 'status') {
-                    valA = (a.Geburtsort_Lat && a.Geburtsort_Lng) ? 1 : 0;
-                    valB = (b.Geburtsort_Lat && b.Geburtsort_Lng) ? 1 : 0;
+                    const aLat = parseCoord(a.Geburtsort_Lat || a.Geburtsort_lat || a.lat);
+                    const bLat = parseCoord(b.Geburtsort_Lat || b.Geburtsort_lat || b.lat);
+                    valA = (aLat !== null) ? 1 : 0;
+                    valB = (bLat !== null) ? 1 : 0;
                 }
                 if (valA < valB) return currentSort.asc ? -1 : 1;
                 if (valA > valB) return currentSort.asc ? 1 : -1;
@@ -328,32 +345,43 @@
             let geocodedCount = 0;
 
             data.forEach(person => {
-                let onMap = false;
-                // Geburtsort Marker
-                if (person.Geburtsort_Lat && person.Geburtsort_Lng) {
-                    onMap = true;
-                    const lat = applyJitter(person.Geburtsort_Lat);
-                    const lng = applyJitter(person.Geburtsort_Lng);
+                try {
+                    let onMap = false;
                     
-                    const marker = L.circleMarker([lat, lng], { radius: 8, fillColor: '#3498db', color: '#ffffff', weight: 2, opacity: 1, fillOpacity: 0.8, className: 'leaflet-interactive' });
-                    marker.bindTooltip(`<b>${person.Name || 'Unbekannt'}, ${person.Vorname || ''}</b><br>Geboren in ${person.Geburtsort || '?'}`, { className: 'custom-tooltip', direction: 'top' });
-                    marker.on('click', function(e) { L.DomEvent.stopPropagation(e); showPerson(person); });
-                    birthCluster.addLayer(marker);
-                }
+                    // Robuster Check für Geburtsort
+                    const bLat = parseCoord(person.Geburtsort_Lat || person.Geburtsort_lat || person.lat);
+                    const bLng = parseCoord(person.Geburtsort_Lng || person.Geburtsort_lng || person.lng || person.lon);
 
-                // Todesort Marker
-                if (person.Todesort_Lat && person.Todesort_Lng) {
-                    onMap = true;
-                    const lat = applyJitter(person.Todesort_Lat);
-                    const lng = applyJitter(person.Todesort_Lng);
+                    if (bLat !== null && bLng !== null) {
+                        onMap = true;
+                        const lat = applyJitter(bLat);
+                        const lng = applyJitter(bLng);
+                        
+                        const marker = L.circleMarker([lat, lng], { radius: 8, fillColor: '#3498db', color: '#ffffff', weight: 2, opacity: 1, fillOpacity: 0.8, className: 'leaflet-interactive' });
+                        marker.bindTooltip(`<b>${person.Name || 'Unbekannt'}, ${person.Vorname || ''}</b><br>Geboren in ${person.Geburtsort || '?'}`, { className: 'custom-tooltip', direction: 'top' });
+                        marker.on('click', function(e) { L.DomEvent.stopPropagation(e); showPerson(person); });
+                        birthCluster.addLayer(marker);
+                    }
+
+                    // Robuster Check für Todesort
+                    const tLat = parseCoord(person.Todesort_Lat || person.Todesort_lat);
+                    const tLng = parseCoord(person.Todesort_Lng || person.Todesort_lng);
+
+                    if (tLat !== null && tLng !== null) {
+                        onMap = true;
+                        const lat = applyJitter(tLat);
+                        const lng = applyJitter(tLng);
+                        
+                        const marker = L.circleMarker([lat, lng], { radius: 8, fillColor: '#2c3e50', color: '#ffffff', weight: 2, opacity: 1, fillOpacity: 0.8, className: 'leaflet-interactive' });
+                        marker.bindTooltip(`<b>${person.Name || 'Unbekannt'}, ${person.Vorname || ''}</b><br>Gestorben in ${person.Todesort || '?'}`, { className: 'custom-tooltip', direction: 'top' });
+                        marker.on('click', function(e) { L.DomEvent.stopPropagation(e); showPerson(person); });
+                        deathCluster.addLayer(marker);
+                    }
                     
-                    const marker = L.circleMarker([lat, lng], { radius: 8, fillColor: '#2c3e50', color: '#ffffff', weight: 2, opacity: 1, fillOpacity: 0.8, className: 'leaflet-interactive' });
-                    marker.bindTooltip(`<b>${person.Name || 'Unbekannt'}, ${person.Vorname || ''}</b><br>Gestorben in ${person.Todesort || '?'}`, { className: 'custom-tooltip', direction: 'top' });
-                    marker.on('click', function(e) { L.DomEvent.stopPropagation(e); showPerson(person); });
-                    deathCluster.addLayer(marker);
+                    if(onMap) geocodedCount++;
+                } catch (err) {
+                    console.error("Fehler beim Verarbeiten von Person:", person.Name, err);
                 }
-                
-                if(onMap) geocodedCount++;
             });
 
             // 2. Status-Text updaten
