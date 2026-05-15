@@ -26,187 +26,149 @@
             overflow: hidden;
         }
 
-        /* Karte nimmt den ganzen Bildschirm ein */
-        #map {
-            width: 100vw;
-            height: 100vh;
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 1;
-        }
+        #map { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
 
         /* UI Panel oben links */
         #ui-panel {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            width: 320px;
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-            z-index: 1000; /* Über der Karte */
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+            position: absolute; top: 20px; left: 20px; width: 320px;
+            background: white; padding: 20px; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15); z-index: 1000;
+            display: flex; flex-direction: column; gap: 15px;
         }
+        #ui-panel h2 { margin: 0; font-size: 1.2rem; color: var(--primary-color); }
+        #search-input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        #status-text { font-size: 0.85rem; color: #666; }
 
-        #ui-panel h2 {
-            margin: 0;
-            font-size: 1.2rem;
-            color: var(--primary-color);
+        /* Buttons */
+        .btn-primary {
+            background-color: var(--accent-color); color: white; border: none;
+            padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background 0.3s;
         }
-
-        #search-input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 1rem;
+        .btn-primary:hover { background-color: #2980b9; }
+        .btn-secondary {
+            background-color: #ecf0f1; color: var(--primary-color); border: 1px solid #bdc3c7;
+            padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background 0.3s;
         }
-
-        #status-text {
-            font-size: 0.85rem;
-            color: #666;
-        }
-
-        /* Tutorial Button */
-        #tutorial-btn {
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.3s;
-        }
-        #tutorial-btn:hover { background-color: #2980b9; }
+        .btn-secondary:hover { background-color: #bdc3c7; }
 
         /* Sidebars Links & Rechts */
         .sidebar {
-            width: var(--sidebar-width); 
-            height: 100vh; 
-            background: white;
-            position: fixed; 
-            top: 0; 
-            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
-            z-index: 9999;
-            display: flex; 
-            flex-direction: column; 
-            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            width: var(--sidebar-width); height: 100vh; background: white;
+            position: fixed; top: 0; transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
+            z-index: 9999; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.3);
         }
-        
         #sidebar-left { left: calc(-1 * var(--sidebar-width)); }
         #sidebar-right { right: calc(-1 * var(--sidebar-width)); }
         
-        /* Absolut sichere Methode für das Ausfahren */
+        /* WICHTIG: !important sorgt dafür, dass die Leiste beim Klick garantiert reinfährt */
         #sidebar-left.active { left: 0 !important; }
         #sidebar-right.active { right: 0 !important; }
 
-        .sidebar-header { 
-            padding: 20px; 
-            background: var(--primary-color); 
-            color: white; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-        }
-        
+        .sidebar-header { padding: 20px; background: var(--primary-color); color: white; display: flex; justify-content: space-between; align-items: center; }
         .sidebar-header h3 { margin: 0; font-size: 1.1rem; }
-        
-        .close-btn {
-            background: none; border: none; color: white; font-size: 1.5rem;
-            cursor: pointer; line-height: 1; padding: 0 5px;
-        }
-        
+        .close-btn { background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; }
         .close-btn:hover { color: #ccc; }
-
-        .sidebar-content {
-            padding: 20px;
-            overflow-y: auto;
-            flex-grow: 1;
-            background: #f4f7f6;
-        }
+        .sidebar-content { padding: 20px; overflow-y: auto; flex-grow: 1; background: #f4f7f6; }
 
         /* Cards für Personendaten */
-        .card {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            border-left: 4px solid var(--accent-color);
-        }
-
+        .card { background: white; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 4px solid var(--accent-color); }
         .label { font-size: 0.8rem; color: #888; text-transform: uppercase; margin-bottom: 3px; }
         .value { font-size: 1rem; color: #333; margin-bottom: 10px; word-wrap: break-word; }
         .value:last-child { margin-bottom: 0; }
 
-        /* Marker Styles für den Tooltip (falls benötigt) */
-        .leaflet-tooltip.custom-tooltip {
-            background: rgba(255,255,255,0.9);
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            color: #333;
-            font-weight: bold;
+        /* Tooltip Styles */
+        .custom-tooltip { background: rgba(255,255,255,0.95); border: 1px solid #ccc; border-radius: 4px; color: #333; font-weight: bold; }
+
+        /* Personenliste / Tabelle */
+        #list-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(255,255,255,0.98); z-index: 10000;
+            display: none; flex-direction: column; padding: 30px; box-sizing: border-box;
         }
+        #list-overlay.active { display: flex; }
+        .list-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary-color); padding-bottom: 10px; margin-bottom: 20px; }
+        .list-header h2 { margin: 0; color: var(--primary-color); }
+        .list-close-btn { font-size: 2rem; cursor: pointer; color: #666; font-weight: bold; line-height: 1; }
+        .list-close-btn:hover { color: #000; }
+        
+        .table-container { flex-grow: 1; overflow-y: auto; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; text-align: left; background: white; }
+        th { position: sticky; top: 0; background: var(--primary-color); color: white; padding: 15px; cursor: pointer; transition: background 0.2s; user-select: none; }
+        th:hover { background: #1a252f; }
+        td { padding: 12px 15px; border-bottom: 1px solid #eee; }
+        tr:hover { background-color: #f0f8ff; cursor: pointer; }
+        
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; color: white; text-transform: uppercase; }
+        .badge.green { background: #27ae60; }
+        .badge.red { background: #e74c3c; }
 
         /* Tutorial Modal */
         #tutorial-modal {
-            display: none;
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.6); z-index: 10000;
-            justify-content: center; align-items: center;
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.6); z-index: 10001; justify-content: center; align-items: center;
         }
         #tutorial-modal.active { display: flex; }
-        .tutorial-content {
-            background: white; width: 600px; max-width: 90%; max-height: 80vh;
-            border-radius: 12px; padding: 30px; overflow-y: auto;
-            position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
+        .tutorial-content { background: white; width: 600px; max-width: 90%; max-height: 80vh; border-radius: 12px; padding: 30px; overflow-y: auto; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .tutorial-content h1 { margin-top: 0; color: var(--primary-color); border-bottom: 2px solid var(--accent-color); padding-bottom: 10px;}
         .tutorial-content h2 { color: var(--accent-color); margin-top: 20px;}
-        .tutorial-close {
-            position: absolute; top: 15px; right: 20px; font-size: 1.5rem;
-            cursor: pointer; color: #666; font-weight: bold;
-        }
+        .tutorial-close { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; cursor: pointer; color: #666; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <!-- Das Container-Element für die Leaflet-Karte -->
+    <!-- Karte -->
     <div id="map"></div>
 
-    <!-- UI Panel (Suchfeld und Infos) -->
+    <!-- UI Panel -->
     <div id="ui-panel">
         <h2>Varel DP-Database</h2>
         <input type="text" id="search-input" placeholder="Name, Ort oder ID suchen...">
         <div id="status-text">Lade Daten...</div>
-        <button id="tutorial-btn">Anleitung & Hilfe</button>
+        <button id="toggle-list-btn" class="btn-secondary">Personenliste anzeigen</button>
+        <button id="tutorial-btn" class="btn-primary">Anleitung & Hilfe</button>
     </div>
 
-    <!-- Linke Sidebar (Stammdaten) -->
+    <!-- Linke Sidebar -->
     <div id="sidebar-left" class="sidebar">
         <div class="sidebar-header">
             <h3>Stammdaten</h3>
             <button class="close-btn" onclick="closeSidebars()">&times;</button>
         </div>
-        <div class="sidebar-content" id="content-left">
-            <!-- Wird per JS befüllt -->
-        </div>
+        <div class="sidebar-content" id="content-left"></div>
     </div>
 
-    <!-- Rechte Sidebar (Aufenthaltsorte) -->
+    <!-- Rechte Sidebar -->
     <div id="sidebar-right" class="sidebar">
         <div class="sidebar-header">
             <h3>Aufenthalte</h3>
             <button class="close-btn" onclick="closeSidebars()">&times;</button>
         </div>
-        <div class="sidebar-content" id="content-right">
-            <!-- Wird per JS befüllt -->
+        <div class="sidebar-content" id="content-right"></div>
+    </div>
+
+    <!-- Personenliste (Tabelle) Overlay -->
+    <div id="list-overlay">
+        <div class="list-header">
+            <h2>Personenliste & Suchergebnisse</h2>
+            <div class="list-close-btn" onclick="document.getElementById('list-overlay').classList.remove('active')">&times;</div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th onclick="sortTable('Nummer')">Nummer ↕</th>
+                        <th onclick="sortTable('Name')">Name ↕</th>
+                        <th onclick="sortTable('Vorname')">Vorname ↕</th>
+                        <th onclick="sortTable('Geburtsdatum')">Geburtsdatum ↕</th>
+                        <th onclick="sortTable('Geburtsort')">Geburtsort ↕</th>
+                        <th onclick="sortTable('Staatsangehörigkeit')">Nationalität ↕</th>
+                        <th onclick="sortTable('status')">Karten-Status ↕</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <!-- Wird per JS befüllt -->
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -216,57 +178,60 @@
             <span class="tutorial-close" onclick="document.getElementById('tutorial-modal').classList.remove('active')">&times;</span>
             <h1>Willkommen in der Varel DP-Database</h1>
             <p>Diese interaktive Karte visualisiert die historischen Daten von Displaced Persons (DPs).</p>
-            
-            <h2>1. Die Karte & Marker</h2>
-            <p>Auf der Karte sehen Sie farbige Kreise (Marker). Hellblaue Marker stehen für Geburtsorte, dunkelblaue für Todesorte (falls aktiviert). Gruppen von Markern werden als Cluster mit einer Zahl dargestellt. Klicken Sie darauf, um hineinzuzoomen.</p>
-            
-            <h2>2. Personendetails ansehen</h2>
-            <p><b>Klicken Sie auf einen einzelnen, farbigen Punkt auf der Karte.</b> Dadurch öffnen sich links und rechts zwei Leisten:</p>
-            <ul>
-                <li><b>Links:</b> Stammdaten (Name, ID, Geburtsdatum, Religion etc.)</li>
-                <li><b>Rechts:</b> Aufenthaltsgeschichte (Chronologie der Zuzüge und Abzüge)</li>
-            </ul>
-
-            <h2>3. Suchen und Filtern</h2>
-            <p>Nutzen Sie das Suchfeld oben links, um nach Namen, IDs oder Orten zu suchen. Die Karte aktualisiert sich in Echtzeit und zeigt nur noch die passenden Treffer an.</p>
-            
-            <button id="tutorial-btn" style="width: 100%; margin-top: 20px;" onclick="document.getElementById('tutorial-modal').classList.remove('active')">Verstanden, los geht's!</button>
+            <h2>1. Ebenen & Marker</h2>
+            <p>Wählen Sie oben rechts über das Ebenen-Menü aus, ob Sie Geburts- oder Todesorte anzeigen möchten. Klicken Sie auf Gruppen-Cluster (Zahlen), um hineinzuzoomen.</p>
+            <h2>2. Personendetails</h2>
+            <p>Klicken Sie auf einen farbigen Punkt auf der Karte, um links die Stammdaten und rechts die Aufenthaltsgeschichte der Person einzusehen.</p>
+            <h2>3. Suchen und Listenansicht</h2>
+            <p>Nutzen Sie die Suchleiste oder öffnen Sie die <b>Personenliste</b>, um alle Datensätze in einer sortierbaren Tabelle zu betrachten. Fehlende Koordinaten werden in der Tabelle rot markiert.</p>
+            <button class="btn-primary" style="width: 100%; margin-top: 20px;" onclick="document.getElementById('tutorial-modal').classList.remove('active')">Verstanden, los geht's!</button>
         </div>
     </div>
 
-    <!-- Leaflet JS -->
+    <!-- Leaflet JS & MarkerCluster JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- Leaflet MarkerCluster JS -->
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 
     <script>
-        // Globale Variablen für Daten und Layer
         let globalData = [];
-        let birthCluster, deathCluster;
+        let currentFilteredData = [];
+        let currentSort = { col: 'Name', asc: true };
 
-        // Karte initialisieren. Zoom-Kontrolle unten rechts, damit sie nicht das Suchfeld verdeckt.
+        // Karte initialisieren
         const map = L.map('map', { zoomControl: false }).setView([51.5, 10.5], 5);
         L.control.zoom({ position: 'bottomright' }).addTo(map);
-        
-        // Helle, unaufdringliche Basiskarte (CartoDB Light)
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { 
-            attribution: '&copy; CARTO' 
-        }).addTo(map);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; CARTO' }).addTo(map);
 
-        // Klick auf die leere Karte schließt die Sidebars
+        // Klick auf leere Karte schließt Sidebars
         map.on('click', closeSidebars);
 
-        // Tutorial Button Logic
+        // UI Buttons Events
         document.getElementById('tutorial-btn').addEventListener('click', () => {
             document.getElementById('tutorial-modal').classList.add('active');
         });
+        document.getElementById('toggle-list-btn').addEventListener('click', () => {
+            document.getElementById('list-overlay').classList.add('active');
+            closeSidebars();
+        });
 
-        // Sidebar füllen und öffnen (Jetzt 100% absturzsicher)
+        // WICHTIG: Layer-Gruppen nur EINMAL global anlegen, nicht bei jeder Suche neu!
+        const birthCluster = L.markerClusterGroup({ disableClusteringAtZoom: 14 });
+        const deathCluster = L.markerClusterGroup({ disableClusteringAtZoom: 14 });
+
+        // Geburtsorte standardmäßig auf die Karte legen
+        map.addLayer(birthCluster);
+
+        // Filter-Menü oben rechts anlegen
+        const overlayMaps = {
+            "Geburtsorte (Hellblau)": birthCluster,
+            "Todesorte (Dunkelblau)": deathCluster
+        };
+        L.control.layers(null, overlayMaps, { collapsed: false }).addTo(map);
+
         function showPerson(p) {
             try {
                 console.log("Person angeklickt:", p.Name);
                 
-                // Linke Seite: Stammdaten
                 document.getElementById('content-left').innerHTML = `
                     <div class="card">
                         <div class="label">Name</div><div class="value"><b>${p.Name || 'Unbekannt'}, ${p.Vorname || ''}</b></div>
@@ -278,186 +243,143 @@
                     </div>
                 `;
                 
-                // Rechte Seite: Aufenthalte (Crash-Sicher gemacht!)
                 let aufHtm = '';
-                
                 if (Array.isArray(p.Aufenthalte) && p.Aufenthalte.length > 0) {
-                    // Wenn es eine saubere Liste ist
-                    aufHtm = p.Aufenthalte.map(a => `
-                        <div class="card">
-                            <div class="label">${a.Zuzug || '?'} bis ${a.Abzug || '?'}</div>
-                            <div class="value">${a.Ort || '-'}</div>
-                        </div>
-                    `).join('');
+                    aufHtm = p.Aufenthalte.map(a => `<div class="card"><div class="label">${a.Zuzug || '?'} bis ${a.Abzug || '?'}</div><div class="value">${a.Ort || '-'}</div></div>`).join('');
                 } else if (typeof p.Aufenthalte === 'string' && p.Aufenthalte.trim() !== '') {
-                    // Falls die Aufenthalte als reiner Text in der JSON stehen
-                    aufHtm = `
-                        <div class="card">
-                            <div class="label">Aufenthalt (Textnotiz)</div>
-                            <div class="value">${p.Aufenthalte}</div>
-                        </div>
-                    `;
+                    aufHtm = `<div class="card"><div class="label">Aufenthalt (Textnotiz)</div><div class="value">${p.Aufenthalte}</div></div>`;
                 } else {
-                    // Wenn gar nichts vorhanden ist
                     aufHtm = '<div class="card"><div class="value" style="color:#666;">Keine weiteren Meldedaten vorhanden.</div></div>';
                 }
-                
                 document.getElementById('content-right').innerHTML = aufHtm;
                 
-                // Klassen hinzufügen um die CSS-Animation auszulösen
                 document.getElementById('sidebar-left').classList.add('active');
                 document.getElementById('sidebar-right').classList.add('active');
-                console.log("Sidebars wurden erfolgreich geöffnet!");
-                
             } catch (error) {
-                console.error("KRITISCHER FEHLER beim Öffnen der Person:", error);
+                console.error("Fehler beim Öffnen der Person:", error);
             }
         }
 
-        // Sidebar schließen
         function closeSidebars() {
             document.getElementById('sidebar-left').classList.remove('active');
             document.getElementById('sidebar-right').classList.remove('active');
         }
 
-        // Jitter-Funktion: Verschiebt Marker minimal, damit sie sich nicht verdecken
         function applyJitter(coord, maxOffset = 0.005) {
-            // Stelle sicher, dass die Koordinate eine Zahl ist, bevor wir rechnen
             const numCoord = parseFloat(coord);
             if(isNaN(numCoord)) return 0;
             return numCoord + (Math.random() - 0.5) * maxOffset;
         }
 
-        // Daten auf der Karte zeichnen
-        function renderData(data) {
-            // Alte Layer löschen, falls vorhanden
-            if (birthCluster) map.removeLayer(birthCluster);
-            if (deathCluster) map.removeLayer(deathCluster);
+        function renderTable(data) {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+            
+            data.forEach(p => {
+                const hasCoords = (p.Geburtsort_Lat && p.Geburtsort_Lng) || (p.Todesort_Lat && p.Todesort_Lng);
+                const statusBadge = hasCoords ? '<span class="badge green">Geokodiert</span>' : '<span class="badge red">Fehlt</span>';
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${p.Nummer || '-'}</td>
+                    <td><b>${p.Name || '-'}</b></td>
+                    <td>${p.Vorname || '-'}</td>
+                    <td>${p.Geburtsdatum || '-'}</td>
+                    <td>${p.Geburtsort || '-'}</td>
+                    <td>${p.Staatsangehörigkeit || '-'}</td>
+                    <td>${statusBadge}</td>
+                `;
+                tr.onclick = () => {
+                    showPerson(p);
+                    document.getElementById('list-overlay').classList.remove('active');
+                };
+                tbody.appendChild(tr);
+            });
+        }
 
-            // Neue Cluster-Gruppen anlegen
-            birthCluster = L.markerClusterGroup({ disableClusteringAtZoom: 14 });
-            deathCluster = L.markerClusterGroup({ disableClusteringAtZoom: 14 });
+        function sortTable(col) {
+            if (currentSort.col === col) {
+                currentSort.asc = !currentSort.asc;
+            } else {
+                currentSort.col = col;
+                currentSort.asc = true;
+            }
+            
+            currentFilteredData.sort((a, b) => {
+                let valA = a[col] || ''; let valB = b[col] || '';
+                if(col === 'status') {
+                    valA = (a.Geburtsort_Lat && a.Geburtsort_Lng) ? 1 : 0;
+                    valB = (b.Geburtsort_Lat && b.Geburtsort_Lng) ? 1 : 0;
+                }
+                if (valA < valB) return currentSort.asc ? -1 : 1;
+                if (valA > valB) return currentSort.asc ? 1 : -1;
+                return 0;
+            });
+            renderTable(currentFilteredData);
+        }
+
+        function updateView(data) {
+            currentFilteredData = data;
+            
+            // 1. Karte updaten (Intelligentes Löschen statt Zerstören der Layer)
+            birthCluster.clearLayers();
+            deathCluster.clearLayers();
 
             let geocodedCount = 0;
 
             data.forEach(person => {
+                let onMap = false;
                 // Geburtsort Marker
                 if (person.Geburtsort_Lat && person.Geburtsort_Lng) {
-                    geocodedCount++;
+                    onMap = true;
                     const lat = applyJitter(person.Geburtsort_Lat);
                     const lng = applyJitter(person.Geburtsort_Lng);
                     
-                    // Wir nutzen L.circleMarker (Vektor) - 100% klickbar!
-                    const marker = L.circleMarker([lat, lng], {
-                        radius: 8,
-                        fillColor: '#3498db', // Hellblau
-                        color: '#ffffff',
-                        weight: 2,
-                        opacity: 1,
-                        fillOpacity: 0.8,
-                        className: 'leaflet-interactive' // Stellt sicher, dass Klicks ankommen
-                    });
-
-                    marker.bindTooltip(`<b>${person.Name || 'Unbekannt'}, ${person.Vorname || ''}</b><br>Geboren in ${person.Geburtsort || '?'}`, {
-                        className: 'custom-tooltip', direction: 'top'
-                    });
-
-                    // Klick-Event (sicher)
-                    marker.on('click', function(e) {
-                        L.DomEvent.stopPropagation(e); // Verhindert, dass der Klick auf die Karte durchgeht
-                        showPerson(person);
-                    });
-
+                    const marker = L.circleMarker([lat, lng], { radius: 8, fillColor: '#3498db', color: '#ffffff', weight: 2, opacity: 1, fillOpacity: 0.8, className: 'leaflet-interactive' });
+                    marker.bindTooltip(`<b>${person.Name || 'Unbekannt'}, ${person.Vorname || ''}</b><br>Geboren in ${person.Geburtsort || '?'}`, { className: 'custom-tooltip', direction: 'top' });
+                    marker.on('click', function(e) { L.DomEvent.stopPropagation(e); showPerson(person); });
                     birthCluster.addLayer(marker);
                 }
 
-                // Todesort Marker (falls in Daten vorhanden)
+                // Todesort Marker
                 if (person.Todesort_Lat && person.Todesort_Lng) {
+                    onMap = true;
                     const lat = applyJitter(person.Todesort_Lat);
                     const lng = applyJitter(person.Todesort_Lng);
                     
-                    const marker = L.circleMarker([lat, lng], {
-                        radius: 8,
-                        fillColor: '#2c3e50', // Dunkelblau
-                        color: '#ffffff',
-                        weight: 2,
-                        opacity: 1,
-                        fillOpacity: 0.8,
-                        className: 'leaflet-interactive'
-                    });
-
-                    marker.bindTooltip(`<b>${person.Name || 'Unbekannt'}, ${person.Vorname || ''}</b><br>Gestorben in ${person.Todesort || '?'}`, {
-                        className: 'custom-tooltip', direction: 'top'
-                    });
-
-                    marker.on('click', function(e) {
-                        L.DomEvent.stopPropagation(e);
-                        showPerson(person);
-                    });
-
+                    const marker = L.circleMarker([lat, lng], { radius: 8, fillColor: '#2c3e50', color: '#ffffff', weight: 2, opacity: 1, fillOpacity: 0.8, className: 'leaflet-interactive' });
+                    marker.bindTooltip(`<b>${person.Name || 'Unbekannt'}, ${person.Vorname || ''}</b><br>Gestorben in ${person.Todesort || '?'}`, { className: 'custom-tooltip', direction: 'top' });
+                    marker.on('click', function(e) { L.DomEvent.stopPropagation(e); showPerson(person); });
                     deathCluster.addLayer(marker);
                 }
+                
+                if(onMap) geocodedCount++;
             });
 
-            // Layer zur Karte hinzufügen
-            map.addLayer(birthCluster);
-            // deathCluster standardmäßig deaktiviert, kann aber über Layer-Control hinzugefügt werden
-
-            // Layer-Kontrolle hinzufügen (nur wenn sie nicht schon existiert)
-            if(!window.layerControl) {
-                const overlayMaps = {
-                    "Geburtsorte anzeigen": birthCluster,
-                    "Todesorte anzeigen": deathCluster
-                };
-                window.layerControl = L.control.layers(null, overlayMaps, { collapsed: false }).addTo(map);
-            }
-
-            // Status aktualisieren
+            // 2. Status-Text updaten
+            const missing = data.length - geocodedCount;
             document.getElementById('status-text').innerText = 
-                `${data.length} Personen gefunden (${geocodedCount} auf Karte gezeichnet).`;
+                `${data.length} Personen gefunden (${missing} fehlen auf Karte).`;
+
+            // 3. Tabelle updaten
+            renderTable(currentFilteredData);
         }
 
-        // Daten laden (Mock-Data oder echte data.json)
+        // Initiale Daten laden
         fetch('data.json')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("data.json nicht gefunden. Verwende Beispieldaten.");
-                }
-                return response.json();
-            })
+            .then(response => response.ok ? response.json() : Promise.reject("File not found"))
             .then(data => {
                 globalData = data;
-                renderData(globalData);
-                // Zeige Tutorial beim ersten Laden
-                document.getElementById('tutorial-modal').classList.add('active');
+                updateView(globalData);
+                document.getElementById('tutorial-modal').classList.add('active'); // Tutorial beim Start
             })
             .catch(error => {
-                console.warn(error);
-                document.getElementById('status-text').innerText = "Konnte data.json nicht laden. Bitte stelle sicher, dass die Datei existiert.";
-                
-                // Fallback-Beispieldaten zum Testen des Layouts
-                globalData = [
-                    {
-                        "Nummer": "1234",
-                        "Name": "Mustermann",
-                        "Vorname": "Max",
-                        "Geburtsdatum": "01.01.1920",
-                        "Geburtsort": "Berlin",
-                        "Geburtsort_Lat": 52.52,
-                        "Geburtsort_Lng": 13.40,
-                        "Staatsangehörigkeit": "Polnisch",
-                        "Beruf": "Tischler",
-                        "Glaubensbekenntnis": "Katholisch",
-                        "Aufenthalte": [
-                            {"Zuzug": "1945", "Abzug": "1946", "Ort": "Varel DP Camp"},
-                            {"Zuzug": "1946", "Abzug": "1948", "Ort": "Bremen"}
-                        ]
-                    }
-                ];
-                renderData(globalData);
+                console.warn("Lade Fallback-Daten...", error);
+                globalData = [{ "Nummer": "123", "Name": "Mustermann", "Vorname": "Max", "Geburtsdatum": "1920", "Geburtsort": "Berlin", "Geburtsort_Lat": 52.52, "Geburtsort_Lng": 13.40, "Staatsangehörigkeit": "Polnisch", "Aufenthalte": [{"Zuzug": "1945", "Abzug": "1946", "Ort": "Varel DP Camp"}] }];
+                updateView(globalData);
             });
 
-        // Suchfunktion
+        // Suchfunktion - Filtert jetzt elegant und behält Layer-Control bei!
         document.getElementById('search-input').addEventListener('input', function(e) {
             const term = e.target.value.toLowerCase();
             const filtered = globalData.filter(p => {
@@ -466,8 +388,8 @@
                        (p.Geburtsort && p.Geburtsort.toLowerCase().includes(term)) ||
                        (p.Nummer && p.Nummer.toString().includes(term));
             });
-            renderData(filtered);
-            closeSidebars(); // Sidebars bei neuer Suche schließen
+            updateView(filtered);
+            closeSidebars();
         });
 
     </script>
